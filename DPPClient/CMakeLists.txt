@@ -7,5 +7,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "DPPClient")
 
 add_subdirectory(include)
 add_subdirectory(src)
-target_link_libraries(${PROJECT_NAME} include)
-target_link_libraries(${PROJECT_NAME} src)
+target_link_libraries(${PROJECT_NAME} PRIVATE include)
+target_link_libraries(${PROJECT_NAME} PRIVATE src)
+
+target_link_libraries(DPPClient PRIVATE ws2_32)
