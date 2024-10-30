@@ -33,7 +33,7 @@ int main()
     hints.ai_protocol = IPPROTO_TCP; // specify we're using TCP protocal
 
     // Resolve the server address and port
-    iResult = getaddrinfo(/*argv[1]*/"127.0.0.1", DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(DEFAULT_ADDRESS, DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed: %d\n", iResult);
         WSACleanup();

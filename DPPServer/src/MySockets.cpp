@@ -32,8 +32,8 @@ namespace MySockets{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s){
-
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s){
+        
     }
     
     SocketManager::Listener::Listener(){
@@ -96,9 +96,7 @@ namespace MySockets{
         return;
     }
 
-    SocketManager::SocketManager(WSAData wsaData) : wsaData(wsaData){
-        
-
+    SocketManager::SocketManager(WSAData wsaData) : wsaData(wsaData), test(std::vector<int>()){
         // create listener and start listening
         listener.startListening();
     }
@@ -112,6 +110,9 @@ namespace MySockets{
     }
 
     void SocketManager::addClient(SOCKET& c){
+        std::vector<int> test2;
+        test2.push_back(5);
+        test.push_back(5);
         clientList.push_back(ClientHandler(c));
         listener = Listener();
         listener.startListening();
