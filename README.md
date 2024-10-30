@@ -1,2 +1,2 @@
 # DPP
-Distributed Parallel processing system to find prime numbers
+Distributed Parallel processing system to find prime numbers.
