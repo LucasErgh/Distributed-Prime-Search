@@ -1,0 +1,21 @@
+Start connection:
+
+Begin loop:
+
+Client Requests Range to Search
+
+Server requests range from server manager
+Server Sends Client Size of array needed for range
+Server Sends Client Range
+Server waits for response
+
+Client Receives data
+Client Searches for primes
+Client sends Server Message indicating length of prime list
+Client Sends Prime list
+
+Server Receives Prime list
+Server Relays that list to Server Manager
+Server Waits for quit message or request message
+
+End loop

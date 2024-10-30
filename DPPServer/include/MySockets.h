@@ -6,7 +6,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
-#pragma comment(lib, "Ws2_32.lib") // Makes compiler include this library
 
 #include <vector>
 
@@ -50,6 +49,8 @@ namespace MySockets{
         std::vector<ClientHandler> clientList; // all client actively connected
         Listener listener;
 
+        WSAData wsaData;
+
         // Called by Listener to add ClientSocket to clientList
         void addClient(SOCKET& c);
 
@@ -57,7 +58,7 @@ namespace MySockets{
 
         class WSAStartupFailed {};
 
-        SocketManager();
+        SocketManager(WSAData);
         ~SocketManager();
         
 

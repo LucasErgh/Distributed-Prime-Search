@@ -1,4 +1,3 @@
-#pragma once
 
 #include "MySockets.h"
 #include "config.h"
@@ -9,7 +8,7 @@ namespace MySockets{
     
     void SocketManager::ClientHandler::clientComs(){
         do{
-                iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
+            iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
                 std::cout << "Bytes received: " << iResult << std::endl;
 
@@ -38,7 +37,7 @@ namespace MySockets{
     }
     
     SocketManager::Listener::Listener(){
-        addrinfo* result = nullptr, *ptr = nullptr, hints;
+        addrinfo *result = nullptr, *ptr = nullptr, hints;
 
         // Initialize SOCKET object
         ZeroMemory(&hints, sizeof(hints)); // WinBase.h macro fills memory to zero
@@ -46,6 +45,13 @@ namespace MySockets{
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
         hints.ai_flags = AI_PASSIVE; // indicates we use returned socket in bind call
+
+        // Resolve address
+        int iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
+        if (iResult != 0){
+            std::cout << "getaddrinfo failed: \n" << iResult;
+            return;
+        }
 
         // Create listenerSocket
         listenerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -56,9 +62,9 @@ namespace MySockets{
         }
 
         // bind listener 
-        int iResult = bind(listenerSocket, result->ai_addr, (int)result->ai_addrlen);
+        iResult = bind(listenerSocket, result->ai_addr, (int)result->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            std::cout << "bind failed with error: %d\n" << WSAGetLastError();
+            std::cout << "bind failed with error: \n" << WSAGetLastError();
             freeaddrinfo(result);
             closesocket(listenerSocket);
             return;
@@ -66,7 +72,7 @@ namespace MySockets{
 
         // Start listening
         if (listen(listenerSocket, SOMAXCONN) == SOCKET_ERROR){
-            std::cout << "Listen failed with error: %ld\n" << WSAGetLastError();
+            std::cout << "Listen failed with error: \n" << WSAGetLastError();
             closesocket(listenerSocket);
             return;
         }
@@ -90,18 +96,10 @@ namespace MySockets{
         return;
     }
 
-    SocketManager::SocketManager(){
-        // Initialize WinSock
-        WSADATA wsaData;
-        int iResult;
-        iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if (iResult = 0) {
-            std::cout << "WSAStartup failed: \n" << iResult;
-            throw WSAStartupFailed();
-        }
+    SocketManager::SocketManager(WSAData wsaData) : wsaData(wsaData){
+        
 
         // create listener and start listening
-        listener = Listener();
         listener.startListening();
     }
 
