@@ -3,7 +3,7 @@
 */build
 
 # config file
-*/config.h
+*config.h
 
 # VSCode
 .vscode/*
