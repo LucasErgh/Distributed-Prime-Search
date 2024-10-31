@@ -30,12 +30,12 @@ namespace MySockets{
                 int iSendResult;
                 int iResult;
 
-                int id;
-
             public:
-            ClientHandler(SOCKET& s);
+            ClientHandler(SOCKET& s, int key);
 
             void clientComs();
+        
+            int key;
         };
 
         class Listener{
@@ -61,6 +61,7 @@ namespace MySockets{
         typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientSocket;
         ClientSocket clientList; // all client actively connected
         std::mutex clientListMutex;
+        int nextClientKey = 0;
 
         Listener listener;
 
@@ -77,7 +78,6 @@ namespace MySockets{
             try { listener.startListening(); } // start listener thread
             catch (const std::runtime_error& e) { throw e; } // propogate error
         }
-
 
         // friends
         friend Listener;

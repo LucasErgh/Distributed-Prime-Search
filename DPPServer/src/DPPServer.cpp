@@ -18,7 +18,7 @@ int main() {
 
     // Create SocketManager
     try { manager = std::make_unique<MySockets::SocketManager>(); }
-    catch (SocketManager::WSAStartupFailed) { std::cout << "WSAStartup failed. Exiting program.\n"; }
+    catch (const std::runtime_error& e) { std::cout << e.what() << "\n\n"; }
     
     manager->start();
 

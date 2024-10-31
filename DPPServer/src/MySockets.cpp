@@ -7,6 +7,7 @@
 namespace MySockets{
     
     void SocketManager::ClientHandler::clientComs(){
+        // Send and receive loop for testing
         do{
             iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
@@ -14,7 +15,6 @@ namespace MySockets{
 
                 std::cout << "Bytes received: " << iResult << std::endl;
 
-                // Echo the buffer back to the sender
                 iSendResult = send(clientSocket, recvbuf, iResult, 0);
 
                 if (iSendResult == SOCKET_ERROR) {
@@ -33,9 +33,7 @@ namespace MySockets{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s) { 
-
-    }
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s) { }
     
     SocketManager::Listener::Listener(){
 
