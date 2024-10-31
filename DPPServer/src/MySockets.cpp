@@ -37,8 +37,9 @@ namespace PrimeProcessor{
 
     SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(/*nextKey++*/ 1) { }
     
-    SocketManager::Listener::Listener(){
+    SocketManager::Listener::Listener(){}
 
+    void SocketManager::Listener::createSocket(){
         // Initialize SOCKET object
         ZeroMemory(&hints, sizeof(hints)); // WinBase.h macro fills memory to zero
         hints.ai_family = AF_INET; // IPv4 adress

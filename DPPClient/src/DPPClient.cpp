@@ -95,7 +95,7 @@ int main()
 
     // Send and receive data until the server closes the connection
     do {
-        code ./// Send an initial buffer
+        /// Send an initial buffer
         iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
         if (iResult == SOCKET_ERROR) {
             std::cout << "send failed: " << WSAGetLastError() << std::endl;

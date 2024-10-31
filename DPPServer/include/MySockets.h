@@ -57,6 +57,7 @@ namespace PrimeProcessor{
             Listener();
             
             // tries to accept a connection
+            void createSocket();
             void startListening();
         };
         
@@ -76,6 +77,9 @@ namespace PrimeProcessor{
         ~SocketManager();
         
         void start(){
+            try { listener.createSocket(); }
+            catch (const std::runtime_error& e) { throw e; } // propogate error
+            
             try { listener.startListening(); } // start listener thread
             catch (const std::runtime_error& e) { throw e; } // propogate error
         }

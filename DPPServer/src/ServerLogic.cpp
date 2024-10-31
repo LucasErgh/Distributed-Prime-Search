@@ -3,18 +3,29 @@
 
 namespace PrimeProcessor {
  
-    ServerLogic::ServerLogic(){
+    ServerLogic::ServerLogic(): manager(new SocketManager()), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::out)){
         // Try to open files
-        rangeSearched.open(rangeFile);
-        if(rangeSearched.fail())
-            throw std::runtime_error("Failed to open " + rangeFile + '\n');
-
-        primesFound.open(primeFile);
-        if(primesFound.fail())
+        if(rangesSearched.fail()){
+            rangesSearched.clear();
+            rangesSearched.open(rangeFile, std::ios::out);
+            if(rangesSearched.fail())
+                throw std::runtime_error("Failed to open " + rangeFile + '\n');
+        }
+        if(primesFound.fail()){
             throw std::runtime_error("Failed to open " + primeFile + '\n');
+        }
 
-        
-
+        // read ranges searched
+        int min, max;
+        while(!rangesSearched.eof() && !rangesSearched.fail()){
+            rangesSearched >> min >> max;
+            if(rangesSearched.fail()){
+                primesSearched.push_back(std::make_pair(1,1));
+            } else {
+                primesSearched.push_back(std::make_pair(min, max));
+            }
+        }
+        rangesSearched.clear();
     }
 
     ServerLogic::~ServerLogic(){
@@ -22,7 +33,8 @@ namespace PrimeProcessor {
     }
 
     bool ServerLogic::start(){
-        return true; // temporary so I can build before implimentation
+        manager->start();
+        return true;
     }
 
     void ServerLogic::stop(){

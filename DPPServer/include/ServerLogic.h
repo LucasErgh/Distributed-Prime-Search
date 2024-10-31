@@ -9,22 +9,23 @@
 #include<fstream>
 
 namespace PrimeProcessor{
-
 typedef std::pair<int, int> range;
+typedef std::vector<range> ranges;
+typedef std::unique_ptr<SocketManager> Manager;
 
     class ServerLogic{
     private:
-        const std::string rangeFile = "Range_Searched";
-        const std::string primeFile = "Primes Found";
-        std::fstream rangeSearched;
+        const std::string rangeFile = "Ranges_Searched.txt";
+        const std::string primeFile = "Primes_Found.txt";
+        std::fstream rangesSearched;
         std::fstream primesFound;
 
-        PrimeProcessor::SocketManager socks;
+        Manager manager;
 
         std::deque<range> workQueue;
         std::mutex workQueueMutex;
 
-        range primesSearched;
+        ranges primesSearched;
         std::mutex primesSearchedMutex;
 
         std::set<int> primes;
