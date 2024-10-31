@@ -22,6 +22,7 @@ int main() {
 
     // Create SocketManager
     SocketManager manager(wsaData);
+    manager.start();
 
     return 0;
 }

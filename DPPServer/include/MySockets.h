@@ -15,7 +15,7 @@ namespace MySockets{
     public:
 
         class ClientHandler{
-            private: 
+            public:
                 SOCKET clientSocket;
 
                 int recvbuflen = DEFAULT_BUFLEN;
@@ -30,7 +30,7 @@ namespace MySockets{
         };
 
         class Listener{
-            private:
+            public:
                 SocketManager* manager;
                 
                 SOCKET listenerSocket = INVALID_SOCKET;
@@ -62,6 +62,8 @@ namespace MySockets{
         SocketManager(WSAData);
         ~SocketManager();
         
-
+        void start(){
+            listener.startListening();
+        }
     };
 }
