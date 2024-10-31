@@ -91,29 +91,19 @@ int main()
 
     iResult;
 
-    // Send an initial buffer
-    iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-    if (iResult == SOCKET_ERROR) {
-        std::cout << "send failed: " << WSAGetLastError() << std::endl;
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 1;
-    }
+    
 
-    std::cout << "Bytes Sent: " << iResult << std::endl;
-
-    // Shutdown the connection for sending since no more data will be sent
-    // Client can still use the connectsocket for receiving data
-    iResult = shutdown(ConnectSocket, SD_SEND);
-    if (iResult == SOCKET_ERROR) {
-        std::cout << "shutdown failed: " << WSAGetLastError() << std::endl;
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    // Receive data until the server closes the connection
+    // Send and receive data until the server closes the connection
     do {
+        // Send an initial buffer
+        iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+        if (iResult == SOCKET_ERROR) {
+            std::cout << "send failed: " << WSAGetLastError() << std::endl;
+            closesocket(ConnectSocket);
+            WSACleanup();
+            return 1;
+        }
+
         iResult = recv(ConnectSocket, recvbuf, DEFAULT_BUFLEN, 0);
         if (iResult > 0)
             std::cout << "Bytes received: " << iResult << std::endl;

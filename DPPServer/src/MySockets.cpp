@@ -10,10 +10,13 @@ namespace MySockets{
         do{
             iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+
                 std::cout << "Bytes received: " << iResult << std::endl;
 
                 // Echo the buffer back to the sender
                 iSendResult = send(clientSocket, recvbuf, iResult, 0);
+
                 if (iSendResult == SOCKET_ERROR) {
                     std::cout << "send failed: " << WSAGetLastError() << std::endl;
                     closesocket(clientSocket);
