@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace MySockets{
+namespace PrimeProcessor{
     
     void SocketManager::ClientHandler::clientComs(){
         // Send and receive loop for testing
@@ -33,7 +33,7 @@ namespace MySockets{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(nextKey++) { }
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(ClientHandler::nextKey++) { }
     
     SocketManager::Listener::Listener(){
 

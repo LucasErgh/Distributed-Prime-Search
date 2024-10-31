@@ -16,21 +16,22 @@
 #include <utility>
 #include <stdexcept>
 
-namespace MySockets{
+namespace PrimeProcessor{
 
     class SocketManager {
-    public:
+    private:
 
         class ClientHandler{
-            public:
-                SOCKET clientSocket;
+        public:
+            SOCKET clientSocket;
 
-                int recvbuflen = DEFAULT_BUFLEN;
-                char recvbuf[DEFAULT_BUFLEN];
-                int iSendResult;
-                int iResult;
+            int recvbuflen = DEFAULT_BUFLEN;
+            char recvbuf[DEFAULT_BUFLEN];
+            int iSendResult;
+            int iResult;
 
-            public:
+        public:
+
             ClientHandler(SOCKET& s);
 
             void clientComs();
@@ -40,23 +41,23 @@ namespace MySockets{
         };
 
         class Listener{
-            public:
-                SocketManager* manager;
-                
-                SOCKET listenerSocket = INVALID_SOCKET;
-                SOCKET clientSocket = INVALID_SOCKET;
-                
-                addrinfo *result = nullptr, *ptr = nullptr, hints;
-                int iResult;
+        public:
+            SocketManager* manager;
+            
+            SOCKET listenerSocket = INVALID_SOCKET;
+            SOCKET clientSocket = INVALID_SOCKET;
+            
+            addrinfo *result = nullptr, *ptr = nullptr, hints;
+            int iResult;
 
-                char recvbuff[DEFAULT_BUFLEN];
-                int recvbuflen = DEFAULT_BUFLEN;
+            char recvbuff[DEFAULT_BUFLEN];
+            int recvbuflen = DEFAULT_BUFLEN;
 
-            public:
-                Listener();
-                
-                // tries to accept a connection
-                void startListening();
+        public:
+            Listener();
+            
+            // tries to accept a connection
+            void startListening();
         };
         
         typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientList;
