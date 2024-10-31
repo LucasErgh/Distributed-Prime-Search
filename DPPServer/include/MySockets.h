@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
+#include <stdexcept>
 
 namespace MySockets{
 
@@ -28,6 +29,8 @@ namespace MySockets{
                 char recvbuf[DEFAULT_BUFLEN];
                 int iSendResult;
                 int iResult;
+
+                int id;
 
             public:
             ClientHandler(SOCKET& s);
@@ -54,8 +57,9 @@ namespace MySockets{
                 // tries to accept a connection
                 void startListening();
         };
-
-        std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
+        
+        typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientSocket;
+        ClientSocket clientList; // all client actively connected
         std::mutex clientListMutex;
 
         Listener listener;
@@ -66,16 +70,17 @@ namespace MySockets{
         void addClient(SOCKET& c);
 
     public:
-        friend Listener;
-        friend ClientHandler;
-
-        class WSAStartupFailed {};
-
-        SocketManager(WSAData);
+        SocketManager();
         ~SocketManager();
         
         void start(){
-            listener.startListening(); // start listener thread
+            try { listener.startListening(); } // start listener thread
+            catch (const std::runtime_error& e) { throw e; } // propogate error
         }
+
+
+        // friends
+        friend Listener;
+        friend ClientHandler;
     };
 }

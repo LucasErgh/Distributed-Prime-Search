@@ -8,21 +8,19 @@
 
 #include <iostream>
 
+#include <memory>
+
 int main() {
     using namespace MySockets;
 
-    // Initialize WinSock
-    WSAData wsaData;
-    int iResult;
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != 0) {
-        std::cout << "WSAStartup failed: \n" << iResult;
-        return 1;
-    }
+    // using pointer so I can initialize it in try block without making move constructor
+    std::unique_ptr<SocketManager> manager; 
 
     // Create SocketManager
-    SocketManager manager(wsaData);
-    manager.start();
+    try { manager = std::make_unique<MySockets::SocketManager>(); }
+    catch (SocketManager::WSAStartupFailed) { std::cout << "WSAStartup failed. Exiting program.\n"; }
+    
+    manager->start();
 
     return 0;
 }

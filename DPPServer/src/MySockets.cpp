@@ -18,19 +18,17 @@ namespace MySockets{
                 iSendResult = send(clientSocket, recvbuf, iResult, 0);
 
                 if (iSendResult == SOCKET_ERROR) {
-                    std::cout << "send failed: " << WSAGetLastError() << std::endl;
                     closesocket(clientSocket);
                     WSACleanup();
-                    return;
+                    throw std::runtime_error("send failed: " + WSAGetLastError());
                 }
                 std::cout << "Bytes sent: " << iSendResult << std::endl;
             }
             else if (iResult == 0)
                 std::cout << "Connection closing...\n";
             else {
-                std::cout << "recv failed: " << WSAGetLastError();
                 closesocket(clientSocket);
-                return;
+                throw std::runtime_error("recv failed: " + WSAGetLastError());
             }
         } while (iResult > 0);
     }
@@ -51,59 +49,59 @@ namespace MySockets{
         // Resolve address
         iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
         if (iResult != 0){
-            std::cout << "getaddrinfo failed: \n" << iResult;
-            return;
+            throw std::runtime_error("Get address info failed with error: " + WSAGetLastError());
         }
 
         // Create listenerSocket
         listenerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
         if (listenerSocket == INVALID_SOCKET) {
-            std::cout << "Error creating listener socket: \n" << WSAGetLastError();
             freeaddrinfo(result);
-            return;
+            throw std::runtime_error("Failed to create listener socket with error: " + WSAGetLastError());
         }
-
-        // inform user of success
-        std::cout << "Listener socket successfully created.\n";
     }
 
     void SocketManager::Listener::startListening(){
-        std::cout << "Listener is running!\n";
-
         // bind listener 
         iResult = bind(listenerSocket, result->ai_addr, (int)result->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            std::cout << "bind failed with error: \n" << WSAGetLastError();
             freeaddrinfo(result);
             closesocket(listenerSocket);
-            return;
+            throw std::runtime_error("Bind failed with error: " + WSAGetLastError());
         }
 
         // Start listening
         if (listen(listenerSocket, SOMAXCONN) == SOCKET_ERROR){
-            std::cout << "Listen failed with error: \n" << WSAGetLastError();
             closesocket(listenerSocket);
-            return;
+            throw std::runtime_error("Bind failed with error: " + WSAGetLastError());
         }
+
+        std::cout << "Started listening\n";
+
         while (true) {
             clientSocket = accept(listenerSocket, nullptr, nullptr);
             
             // handle failed connection
             if (clientSocket == INVALID_SOCKET) {
-                std::cout << "accept failed:\n" << WSAGetLastError();
                 closesocket(listenerSocket);
-                return;
+                throw std::runtime_error("Accept connection failed with error: " + WSAGetLastError());
             }
             
             // handle successful connection
-            manager->addClient(clientSocket);
+            try { manager->addClient(clientSocket); }
+            catch (const std::runtime_error& e) { throw e; }
         }
-        
-        return;
     }
 
-    SocketManager::SocketManager(WSAData wsaData) : wsaData(wsaData){
-        // create listener and start listening
+    SocketManager::SocketManager(){
+        // Initialize WinSock
+        WSAData wsaData;
+        int iResult;
+        iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (iResult != 0) {
+            throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
+        }
+        
+        // set listener parent to this
         listener.manager = this;
     }
 
