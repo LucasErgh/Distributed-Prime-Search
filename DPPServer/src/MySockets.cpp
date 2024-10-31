@@ -100,7 +100,6 @@ namespace PrimeProcessor{
         if (iResult != 0) {
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
-        
 
         // set listener parent to this
         listener.manager = this;
