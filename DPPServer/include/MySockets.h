@@ -46,7 +46,6 @@ namespace MySockets{
                 void startListening();
         };
 
-        std::vector<int> test;
         std::vector<ClientHandler> clientList; // all client actively connected
         Listener listener;
 
