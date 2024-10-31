@@ -6,6 +6,8 @@
 
 namespace PrimeProcessor{
     
+    int SocketManager::ClientHandler::nextKey = 1;
+
     void SocketManager::ClientHandler::clientComs(){
         // Send and receive loop for testing
         do{
@@ -33,7 +35,7 @@ namespace PrimeProcessor{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(ClientHandler::nextKey++) { }
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(/*nextKey++*/ 1) { }
     
     SocketManager::Listener::Listener(){
 
@@ -99,7 +101,6 @@ namespace PrimeProcessor{
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
         
-        ClientHandler::nextKey = 1;
 
         // set listener parent to this
         listener.manager = this;
