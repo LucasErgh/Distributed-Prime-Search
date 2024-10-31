@@ -7,7 +7,12 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 
+#include <mutex>
+#include <thread>
+
+#include <memory>
 #include <vector>
+#include <utility>
 
 namespace MySockets{
 
@@ -36,6 +41,9 @@ namespace MySockets{
                 SOCKET listenerSocket = INVALID_SOCKET;
                 SOCKET clientSocket = INVALID_SOCKET;
                 
+                addrinfo *result = nullptr, *ptr = nullptr, hints;
+                int iResult;
+
                 char recvbuff[DEFAULT_BUFLEN];
                 int recvbuflen = DEFAULT_BUFLEN;
 
@@ -46,7 +54,9 @@ namespace MySockets{
                 void startListening();
         };
 
-        std::vector<ClientHandler> clientList; // all client actively connected
+        std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
+        std::mutex clientListMutex;
+
         Listener listener;
 
         WSAData wsaData;
@@ -55,6 +65,8 @@ namespace MySockets{
         void addClient(SOCKET& c);
 
     public:
+        friend Listener;
+        friend ClientHandler;
 
         class WSAStartupFailed {};
 
@@ -62,7 +74,7 @@ namespace MySockets{
         ~SocketManager();
         
         void start(){
-            listener.startListening();
+            listener.startListening(); // start listener thread
         }
     };
 }

@@ -37,7 +37,6 @@ namespace MySockets{
     }
     
     SocketManager::Listener::Listener(){
-        addrinfo *result = nullptr, *ptr = nullptr, hints;
 
         // Initialize SOCKET object
         ZeroMemory(&hints, sizeof(hints)); // WinBase.h macro fills memory to zero
@@ -47,7 +46,7 @@ namespace MySockets{
         hints.ai_flags = AI_PASSIVE; // indicates we use returned socket in bind call
 
         // Resolve address
-        int iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
+        iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
         if (iResult != 0){
             std::cout << "getaddrinfo failed: \n" << iResult;
             return;
@@ -60,6 +59,13 @@ namespace MySockets{
             freeaddrinfo(result);
             return;
         }
+
+        // inform user of success
+        std::cout << "Listener socket successfully created.\n";
+    }
+
+    void SocketManager::Listener::startListening(){
+        std::cout << "Listener is running!\n";
 
         // bind listener 
         iResult = bind(listenerSocket, result->ai_addr, (int)result->ai_addrlen);
@@ -76,23 +82,20 @@ namespace MySockets{
             closesocket(listenerSocket);
             return;
         }
-
-        // inform user of success
-        std::cout << "Listener socket successfully created.\n";
-    }
-
-    void SocketManager::Listener::startListening(){
-        clientSocket = accept(listenerSocket, nullptr, nullptr);
-        
-        // handle failed connection
-        if (clientSocket == INVALID_SOCKET) {
-            std::cout << "accept failed:\n" << WSAGetLastError();
-            closesocket(listenerSocket);
-            return;
+        while (true) {
+            clientSocket = accept(listenerSocket, nullptr, nullptr);
+            
+            // handle failed connection
+            if (clientSocket == INVALID_SOCKET) {
+                std::cout << "accept failed:\n" << WSAGetLastError();
+                closesocket(listenerSocket);
+                return;
+            }
+            
+            // handle successful connection
+            manager->addClient(clientSocket);
         }
         
-        // handle successful connection
-        manager->addClient(clientSocket);
         return;
     }
 
@@ -110,9 +113,12 @@ namespace MySockets{
     }
 
     void SocketManager::addClient(SOCKET& c){
-        clientList.push_back(ClientHandler(c));
-        listener = Listener();
-        listener.startListening();
+
+        clientListMutex.lock();
+        std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(c);
+        std::thread cThread(ClientHandler::clientComs, client);
+        clientList.emplace_back(std::move(client), std::move(cThread));
+        clientListMutex.unlock();
     }
 
 }
