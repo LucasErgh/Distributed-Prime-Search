@@ -33,7 +33,7 @@ namespace MySockets{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s) { }
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(nextKey++) { }
     
     SocketManager::Listener::Listener(){
 
@@ -99,6 +99,8 @@ namespace MySockets{
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
         
+        ClientHandler::nextKey = 1;
+
         // set listener parent to this
         listener.manager = this;
     }

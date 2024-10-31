@@ -31,10 +31,11 @@ namespace MySockets{
                 int iResult;
 
             public:
-            ClientHandler(SOCKET& s, int key);
+            ClientHandler(SOCKET& s);
 
             void clientComs();
-        
+
+            static int nextKey;
             int key;
         };
 
@@ -58,10 +59,9 @@ namespace MySockets{
                 void startListening();
         };
         
-        typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientSocket;
-        ClientSocket clientList; // all client actively connected
+        typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientList;
+        ClientList clientList; // all client actively connected
         std::mutex clientListMutex;
-        int nextClientKey = 0;
 
         Listener listener;
 
