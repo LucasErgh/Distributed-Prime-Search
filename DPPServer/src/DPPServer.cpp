@@ -24,14 +24,6 @@ int main() {
     SocketManager manager(wsaData);
     manager.start();
 
-    while (true){
-        manager.clientListMutex.lock();
-
-        for(auto& t : manager.clientList){
-            t.second.join();
-        }
-    }
-
     return 0;
 }
 
