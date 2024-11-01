@@ -9,7 +9,9 @@
 #include<fstream>
 
 namespace PrimeProcessor{
-typedef std::pair<int, int> range;
+
+typedef unsigned long long int ull;
+typedef std::pair<ull, ull> range;
 typedef std::vector<range> ranges;
 typedef std::unique_ptr<SocketManager> Manager;
 
@@ -24,16 +26,18 @@ typedef std::unique_ptr<SocketManager> Manager;
 
         std::deque<range> workQueue;
         std::mutex workQueueMutex;
+        ranges WIPQueue;
+        std::mutex WIPQueueMutex;
 
         ranges primesSearched;
         std::mutex primesSearchedMutex;
 
-        std::set<int> primes;
+        std::set<ull> primes;
         std::mutex primesMutex;
 
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
-        void storePrimes(std::set<int> p);
+        void storePrimes(std::set<ull> p);
         
         // populate workQueue when it gets low
         void populateWorkQueue();
