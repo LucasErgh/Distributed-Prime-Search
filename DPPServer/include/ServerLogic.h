@@ -31,16 +31,21 @@ typedef std::unique_ptr<SocketManager> Manager;
 
         ranges primesSearched;
         std::mutex primesSearchedMutex;
+        ull largestSearched;
 
         std::set<ull> primes;
         std::mutex primesMutex;
 
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
-        void storePrimes(std::set<ull> p);
+        void storePrimes();
         
         // populate workQueue when it gets low
         void populateWorkQueue();
+
+        // called after ranges searchd text file is read and primesSearched is populated
+        // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
+        void searchedNormalization();
 
     public:
         ServerLogic();
@@ -49,7 +54,7 @@ typedef std::unique_ptr<SocketManager> Manager;
         bool start();
         void stop();
 
-        void foundPrimes();
+        void foundPrimes(std::set<ull> primes);
     };
 
 }

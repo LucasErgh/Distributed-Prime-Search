@@ -23,6 +23,8 @@ namespace PrimeProcessor{
 
         class ClientHandler{
         public:
+            SocketManager* manager;
+
             SOCKET clientSocket;
 
             int recvbuflen = DEFAULT_BUFLEN;
@@ -82,6 +84,10 @@ namespace PrimeProcessor{
             
             try { listener.startListening(); } // start listener thread
             catch (const std::runtime_error& e) { throw e; } // propogate error
+        }
+
+        void stop(){
+            // To-Do
         }
 
         // friends

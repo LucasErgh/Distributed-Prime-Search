@@ -28,10 +28,17 @@ namespace PrimeProcessor {
             }
         }
         rangesSearched.clear();
+
+        // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
+        searchedNormalization();
+
+        largestSearched = primesSearched.back().second;
+
+        populateWorkQueue();
     }
 
     ServerLogic::~ServerLogic(){
-
+        stop();
     }
 
     bool ServerLogic::start(){
@@ -40,21 +47,43 @@ namespace PrimeProcessor {
     }
 
     void ServerLogic::stop(){
-
+        manager->stop();
+        for(const auto& cur : primesSearched){
+            rangesSearched << cur.first << " " << cur.second;
+        }
+        storePrimes();
     }
 
-    void ServerLogic::storePrimes(std::set<ull> p){
-
+    void ServerLogic::storePrimes(){
+        primesMutex.lock();
+        for(const auto& cur : primes){
+            primesFound << cur << " " << '\n';
+        }
+        primesMutex.unlock();
     }
     void ServerLogic::populateWorkQueue(){
-
+        workQueueMutex.lock();
         int newSize = (workQueue.size() < 5) ? 10 : workQueue.size() * 2;
         
-        // try to join pairs in primesSearched vector
-        // if there is a missing range in primesSearched, add it to workQueue
+        //// number of digits per search set
+        // ull max = *primes.end();
+        // int searchSize = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
+        int searchSize = 100;
 
-        // clever way to sort vector of pairs I saw on cppreference std::sort page using lambda expressions
-        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left.second < right.second});
+        for (int i = workQueue.size(); i < newSize; i++){
+            workQueue.push_back(std::make_pair(largestSearched+1, largestSearched + searchSize));
+        }
+
+        largestSearched = largestSearched + searchSize;
+        workQueueMutex.unlock();
+    }
+
+    // finds gaps in rangesSearched at the start of the program
+    void ServerLogic::searchedNormalization(){
+        primesSearchedMutex.lock();
+        workQueueMutex.lock();
+
+        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left.second < right.second;});
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
             if ((i+1)->first - i->second <= 1){
@@ -65,35 +94,18 @@ namespace PrimeProcessor {
             }
             else {
                 range missing((i->second) + 1, (i + 1)->first-1);
-                // make sure its not in WIPQueue or workQueue
-                if(std::find(WIPQueue.begin(), WIPQueue.end(), missing) == WIPQueue.end() &&
-                    std::find(workQueue.begin(), workQueue.end(), missing) == workQueue.end()) 
-                    workQueue.push_front(missing);
+                workQueue.push_front(missing);
             }
         }
 
-        if(workQueue.size() >= newSize) return;
+        primesSearchedMutex.unlock();
+        workQueueMutex.unlock();
+    }
 
-        // now sort workQueue using same method (but in decending order)
-        std::sort(workQueue.begin(), workQueue.end(), [](auto &left, auto &right){return left.second > right.second});
-
-        // check for missing range between primesSearched and workQueue (and make sure its not in WIPQueue)
-        if(workQueue.front().first - primesSearched.back().second)
-        auto i = primesSearched.back().second + 1;
-
-        // number of digits per search set
-        // ull max = *primes.end();
-        // int i = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
-    
-        int searchSize = 100;
-
-        // Find next range and assume there is no gap between primesSearched and primesBeingSearched
-        if (workQueue.empty()){
-            
-        }
-        if (WIPQueue.empty()) {
-            
-        }
+    void ServerLogic::foundPrimes(std::set<ull> p){
+        primesMutex.lock();
+        primes.insert(p.begin(), p.end());
+        primesMutex.unlock();
     }
 
 }
