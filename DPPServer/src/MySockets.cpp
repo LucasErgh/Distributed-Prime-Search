@@ -1,6 +1,5 @@
 
 #include "MySockets.h"
-#include "config.h"
 
 #include <iostream>
 
@@ -35,7 +34,7 @@ namespace PrimeProcessor{
         } while (iResult > 0);
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s) : clientSocket(s), key(/*nextKey++*/ 1) { }
+    SocketManager::ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
     
     SocketManager::Listener::Listener(){}
 
@@ -93,7 +92,7 @@ namespace PrimeProcessor{
         }
     }
 
-    SocketManager::SocketManager(){
+    SocketManager::SocketManager(ServerLogic* s) : manager(s){
         // Initialize WinSock
         WSAData wsaData;
         int iResult;
@@ -117,7 +116,7 @@ namespace PrimeProcessor{
     void SocketManager::addClient(SOCKET& c){
 
         clientListMutex.lock();
-        std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(c);
+        std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(c, this);
         std::thread cThread(ClientHandler::clientComs, client);
         clientList.emplace_back(std::move(client), std::move(cThread));
         clientListMutex.unlock();

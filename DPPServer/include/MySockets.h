@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include "ServerLogic.h"
 
 // Winsock Libraries
 #include <winsock2.h>
@@ -34,7 +35,7 @@ namespace PrimeProcessor{
 
         public:
 
-            ClientHandler(SOCKET& s);
+            ClientHandler(SOCKET& s, SocketManager* m);
 
             void clientComs();
 
@@ -74,8 +75,11 @@ namespace PrimeProcessor{
         // Called by Listener to add ClientSocket to clientList
         void addClient(SOCKET& c);
 
+        ServerLogic *manager;
+        range getRange() {}
+
     public:
-        SocketManager();
+        SocketManager(ServerLogic*);
         ~SocketManager();
         
         void start(){
