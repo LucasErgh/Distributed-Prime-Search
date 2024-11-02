@@ -2,26 +2,32 @@
 
 #include "config.h"
 
-#include <math.h>
-#include <utility>
+#include <cstdint>
+#include <cstring>
+#include <array>
 #include <vector>
-#include <set>
-#include <string.h>
-#include <string>
 
-typedef unsigned long long int ull;
-typedef std::pair<ull, ull> Range;
-typedef std::set<ull> pSet;
-typedef std::pair<char*,char*> msg;
+#define CLOSE_CONNECTION 0x00
+#define RANGE 0x01
+#define SET 0x02
 
+typedef std::array<unsigned long long, 2> Range;
+typedef std::vector<unsigned long long> PList;
 
-enum MessageType{
-    CLOSE_CONNECTION,
-    RANGE,
-    REQUEST_RANGE,
-    SET
-};
+unsigned char* createMsg(Range r){
+    std::vector<std::byte> msg;
 
+    msg[0] = static_cast<std::byte>(RANGE);
+
+    memcpy(msg[1], r.begin(), r.size() * 8);
+
+}
+
+unsigned char* createMsg(PList l) {
+
+}
+
+/*
 // Convert a integer from base 10 to base 128(for efficient transmition using chars) 
 char* B10To128(ull dividend){
     // the number of characters n will be after converted to base be is 
@@ -80,3 +86,4 @@ msg createMessage(std::pair<ull, ull> range){
     strcpy((message1 + 2), B10To128(sizeof(left))); 
     strcpy((message1 + 3 + sizeof(B10To128(sizeof(left)))), B10To128(sizeof(right)));
 }
+*/
