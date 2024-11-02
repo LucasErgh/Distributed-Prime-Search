@@ -5,7 +5,7 @@
 
 namespace PrimeProcessor {
  
-    ServerLogic::ServerLogic(): manager(new SocketManager()), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::out)){
+    ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::out)){
         // Try to open files
         if(rangesSearched.fail()){
             rangesSearched.clear();
