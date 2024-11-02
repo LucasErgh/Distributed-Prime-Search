@@ -87,13 +87,13 @@ namespace PrimeProcessor {
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
             if ((i+1)->first - i->second <= 1){
-                range pairUnion(i->first, (i+1)->second);
+                Range pairUnion(i->first, (i+1)->second);
                 primesSearched.erase(i, (i+1));
                 primesSearched.insert((i-1), pairUnion);
                 --i;
             }
             else {
-                range missing((i->second) + 1, (i + 1)->first-1);
+                Range missing((i->second) + 1, (i + 1)->first-1);
                 workQueue.push_front(missing);
             }
         }

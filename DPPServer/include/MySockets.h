@@ -76,7 +76,7 @@ namespace PrimeProcessor{
         void addClient(SOCKET& c);
 
         ServerLogic *manager;
-        range getRange() {}
+        Range getRange() {}
 
     public:
         SocketManager(ServerLogic*);

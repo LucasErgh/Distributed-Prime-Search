@@ -11,8 +11,8 @@
 namespace PrimeProcessor{
 
 typedef unsigned long long int ull;
-typedef std::pair<ull, ull> range;
-typedef std::vector<range> ranges;
+typedef std::pair<ull, ull> Range;
+typedef std::vector<Range> Ranges;
 typedef std::unique_ptr<SocketManager> Manager;
 
     class ServerLogic{
@@ -24,12 +24,12 @@ typedef std::unique_ptr<SocketManager> Manager;
 
         Manager manager;
 
-        std::deque<range> workQueue;
+        std::deque<Range> workQueue;
         std::mutex workQueueMutex;
-        ranges WIPQueue;
+        Ranges WIPQueue;
         std::mutex WIPQueueMutex;
 
-        ranges primesSearched;
+        Ranges primesSearched;
         std::mutex primesSearchedMutex;
         ull largestSearched;
 
