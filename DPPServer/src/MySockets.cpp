@@ -19,20 +19,21 @@ namespace PrimeProcessor{
             for (int i = 0; i < 3; i++) {
                 iResult = recv(clientSocket, reinterpret_cast<char*>(header) + i, 2 - bytesReceived, 0);
                 if (iResult <= 0){
-                    // To-Do handle recv error
+                    closesocket(clientSocket);
+                    WSACleanup();
+                    throw std::runtime_error("receive failed: " + WSAGetLastError());
                 }
                 bytesReceived += iResult;
             }
 
-            // Check if client is closing connection
-            msgType = header[0];
-            if (msgType == 0) {
+            // read msg header and check if client is closing connection
+            msgType = readMsg(header, payloadSize);
+            if (!msgType) {
                 // To-Do close client connection
                 return;
             }
 
-            // get payload size 
-            payloadSize = header[1];
+            // get payload size in bytes
             size_t payloadBytes = payloadSize * sizeof(ull);
 
             // read payload
@@ -41,13 +42,32 @@ namespace PrimeProcessor{
             while(bytesReceived < payloadBytes) {
                 iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()) + bytesReceived, payloadBytes - bytesReceived, 0);
                 if (iResult < 0) {
-                    // To-Do handle recv error
+                    closesocket(clientSocket);
+                    WSACleanup();
+                    throw std::runtime_error("deserialize failed: " + WSAGetLastError());
                 }
                 bytesReceived += iResult;
             }
 
-            // send primes found to server
+            // deserialize payload and send list to server manager
+            std::vector<ull> primes(payloadSize);
+            if (readMsg(payload, payloadSize, primes)){
+                // To-Do handle deseerialize error
+                closesocket(clientSocket);
+                WSACleanup();
+                throw std::runtime_error("send failed: " + WSAGetLastError());
+            }
+            manager->foundPrimes(primes);
 
+            // send client new range of primes
+            lastSent = manager->getRange();
+            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), sizeof(lastSent.data()), 0);
+            if (iSendResult == SOCKET_ERROR){
+                closesocket(clientSocket);
+                WSACleanup();
+                throw std::runtime_error("send failed: " + WSAGetLastError());
+            }
+            
             /* test code 
             iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
             if (iResult > 0) {

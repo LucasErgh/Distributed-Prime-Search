@@ -14,16 +14,14 @@
 typedef std::array<unsigned long long, 2> Range;
 typedef std::vector<unsigned long long> PList;
 
-// To-Do add deserialization functions
-// To-Do move create message with prime list to client server
-// To-Do rename this to something meaningful
+// To-Do add deserialization function
 
 // serializes range message into byte array for transmission
 std::vector<std::byte> createMsg(const Range& r){
     std::vector<std::byte> msg(19);
 
     int offset = 0;
-    uint8_t msgType = 1;
+    uint8_t msgType = 0x01;
     uint16_t payloadSize = 2;
     
     // message type
@@ -42,32 +40,21 @@ std::vector<std::byte> createMsg(const Range& r){
     return msg;
 }
 
-// serializes prime list into byte array for transmission 
-std::vector<std::byte> createMsg(const PList& primes) {
-    const uint8_t msgType = 2;
-    const uint16_t payloadSize = primes.size();
+// deserializes header returning an int 
+int readMsg(uint8_t *header, uint16_t &payloadSize){
+    uint8_t msgType = header[0];
+    memcpy(&payloadSize, reinterpret_cast<char*>(header+1), sizeof(uint16_t));
+    return msgType;
+}
 
-    // calculate message size
-    size_t size = sizeof(msgType) + sizeof(payloadSize) + payloadSize * sizeof(unsigned long long);
-
-    std::vector<std::byte> msg(size);
-    int offset = 0;
-
-    // message type
-    std::memcpy(msg.data() + offset, &msgType, sizeof(uint8_t));
-    offset += sizeof(uint8_t);
-
-    // payload size
-    std::memcpy(msg.data() + offset, &payloadSize, sizeof(uint16_t));
-    offset += sizeof(uint16_t);
-
-    // list of primes
-    for (const auto& cur : primes) {
-        std::memcpy(msg.data() + offset, &cur, sizeof(unsigned long long));
-        offset += sizeof(unsigned long long);
+// returns bool indicating success
+bool readMsg(std::vector<std::byte>& payload, const uint16_t& payloadSize, std::vector<unsigned long long> &primes){
+    
+    for(size_t offset = 0; offset < payloadSize; offset += sizeof(unsigned long long)){
+        unsigned long long val;
+        memcpy(&val, reinterpret_cast<char*>(payload.data()+offset), sizeof(uint16_t));    
     }
-
-    return msg;
+    // To-Do verify numbers given
 }
 
 /*
