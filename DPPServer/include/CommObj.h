@@ -14,6 +14,10 @@
 typedef std::array<unsigned long long, 2> Range;
 typedef std::vector<unsigned long long> PList;
 
+// To-Do add deserialization functions
+// To-Do move create message with prime list to client server
+// To-Do rename this to something meaningful
+
 // serializes range message into byte array for transmission
 std::vector<std::byte> createMsg(const Range& r){
     std::vector<std::byte> msg(19);

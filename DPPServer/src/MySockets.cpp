@@ -47,7 +47,6 @@ namespace PrimeProcessor{
             }
 
             // send primes found to server
-            manager.
 
             /* test code 
             iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
