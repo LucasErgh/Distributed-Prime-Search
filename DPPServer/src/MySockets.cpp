@@ -8,8 +8,48 @@ namespace PrimeProcessor{
     int SocketManager::ClientHandler::nextKey = 1;
 
     void SocketManager::ClientHandler::clientComs(){
+        int msgType;
+        uint16_t payloadSize;
+        int bytesReceived = 0;
+
         // Send and receive loop for testing
         do{
+            // get message header
+            uint8_t header[3];
+            for (int i = 0; i < 3; i++) {
+                iResult = recv(clientSocket, reinterpret_cast<char*>(header) + i, 2 - bytesReceived, 0);
+                if (iResult <= 0){
+                    // To-Do handle recv error
+                }
+                bytesReceived += iResult;
+            }
+
+            // Check if client is closing connection
+            msgType = header[0];
+            if (msgType == 0) {
+                // To-Do close client connection
+                return;
+            }
+
+            // get payload size 
+            payloadSize = header[1];
+            size_t payloadBytes = payloadSize * sizeof(ull);
+
+            // read payload
+            std::vector<std::byte> payload(payloadBytes);
+            bytesReceived = 0;
+            while(bytesReceived < payloadBytes) {
+                iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()) + bytesReceived, payloadBytes - bytesReceived, 0);
+                if (iResult < 0) {
+                    // To-Do handle recv error
+                }
+                bytesReceived += iResult;
+            }
+
+            // send primes found to server
+            manager.
+
+            /* test code 
             iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
                 std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -31,6 +71,7 @@ namespace PrimeProcessor{
                 closesocket(clientSocket);
                 throw std::runtime_error("recv failed: " + WSAGetLastError());
             }
+            */
         } while (iResult > 0);
     }
 

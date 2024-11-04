@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "ServerLogic.h"
+#include "CommObj.h"
 
 // Winsock Libraries
 #include <winsock2.h>
@@ -32,6 +33,7 @@ namespace PrimeProcessor{
             char recvbuf[DEFAULT_BUFLEN];
             int iSendResult;
             int iResult;
+            std::vector<std::byte> lastMsg;
 
         public:
 
@@ -76,7 +78,8 @@ namespace PrimeProcessor{
         void addClient(SOCKET& c);
 
         ServerLogic *manager;
-        Range getRange() {}
+        std::vector<std::byte> getRange() { return createMsg(manager->getRange()); }
+        std::vector<ull> foundPrimes();
 
     public:
         SocketManager(ServerLogic*);

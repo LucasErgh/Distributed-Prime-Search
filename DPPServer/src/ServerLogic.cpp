@@ -18,13 +18,13 @@ namespace PrimeProcessor {
         }
 
         // read ranges searched
-        int min, max;
+        ull min, max;
         while(!rangesSearched.eof() && !rangesSearched.fail()){
             rangesSearched >> min >> max;
             if(rangesSearched.fail()){
-                primesSearched.push_back(std::make_pair(1,1));
+                primesSearched.push_back( {1, 1} );
             } else {
-                primesSearched.push_back(std::make_pair(min, max));
+                primesSearched.push_back( {min, max} );
             }
         }
         rangesSearched.clear();
@@ -32,7 +32,7 @@ namespace PrimeProcessor {
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         searchedNormalization();
 
-        largestSearched = primesSearched.back().second;
+        largestSearched = primesSearched.back()[1];
 
         populateWorkQueue();
     }
@@ -49,7 +49,7 @@ namespace PrimeProcessor {
     void ServerLogic::stop(){
         manager->stop();
         for(const auto& cur : primesSearched){
-            rangesSearched << cur.first << " " << cur.second;
+            rangesSearched << cur[0] << " " << cur[1];
         }
         storePrimes();
     }
@@ -71,7 +71,7 @@ namespace PrimeProcessor {
         int searchSize = 100;
 
         for (int i = workQueue.size(); i < newSize; i++){
-            workQueue.push_back(std::make_pair(largestSearched+1, largestSearched + searchSize));
+            workQueue.push_back( {largestSearched + 1, largestSearched + searchSize} );
         }
 
         largestSearched = largestSearched + searchSize;
@@ -86,14 +86,14 @@ namespace PrimeProcessor {
         std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left.second < right.second;});
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
-            if ((i+1)->first - i->second <= 1){
-                Range pairUnion(i->first, (i+1)->second);
+            if ((i+1)->at(0) - i->at(1) <= 1){
+                Range pairUnion = {i->at(0), (i+1)->at(1)};
                 primesSearched.erase(i, (i+1));
                 primesSearched.insert((i-1), pairUnion);
                 --i;
             }
             else {
-                Range missing((i->second) + 1, (i + 1)->first-1);
+                Range missing = {(i->at(1)) + 1, (i + 1)->at(0) - 1};
                 workQueue.push_front(missing);
             }
         }
@@ -102,10 +102,25 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    void ServerLogic::foundPrimes(std::set<ull> p){
+    void ServerLogic::foundPrimes(std::vector<ull> p){
+        // To-Do remove range from WIPQueue
         primesMutex.lock();
         primes.insert(p.begin(), p.end());
         primesMutex.unlock();
+    }
+
+    Range ServerLogic::getRange(){
+        workQueueMutex.lock();
+        WIPQueueMutex.lock();
+
+        Range r = workQueue.back();
+        workQueue.pop_back();
+        WIPQueue.push_back(r);
+
+        workQueueMutex.unlock();
+        WIPQueueMutex.unlock();
+
+        return r;
     }
 
 }

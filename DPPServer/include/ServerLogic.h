@@ -11,7 +11,7 @@
 namespace PrimeProcessor{
 
 typedef unsigned long long int ull;
-typedef std::pair<ull, ull> Range;
+typedef std::array<unsigned long long, 2> Range;
 typedef std::vector<Range> Ranges;
 typedef std::unique_ptr<SocketManager> Manager;
 
@@ -54,7 +54,11 @@ typedef std::unique_ptr<SocketManager> Manager;
         bool start();
         void stop();
 
-        void foundPrimes(std::set<ull> primes);
+        // called by the server manager to get the next range to search
+        Range getRange();
+
+        // called by the server manager to return ranges found
+        void foundPrimes(std::vector<ull> primes);
     };
 
 }
