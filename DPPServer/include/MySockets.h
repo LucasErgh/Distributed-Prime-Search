@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MySockets_h
+#define MySockets_h
 
 #include "config.h"
 #include "ServerLogic.h"
@@ -20,7 +21,7 @@
 
 namespace PrimeProcessor{
 
-    class SocketManager {
+    class SocketManager{
     private:
 
         class ClientHandler{
@@ -29,11 +30,12 @@ namespace PrimeProcessor{
 
             SOCKET clientSocket;
 
-            int recvbuflen = DEFAULT_BUFLEN;
-            char recvbuf[DEFAULT_BUFLEN];
+            uint8_t header[3];
             int iSendResult;
             int iResult;
             std::vector<std::byte> lastSent;
+            // To-Do impliment stop function with public method
+            bool stop = true;
 
         public:
 
@@ -79,7 +81,7 @@ namespace PrimeProcessor{
 
         ServerLogic *manager;
         std::vector<std::byte> getRange() { return createMsg(manager->getRange()); }
-        void foundPrimes(std::vector<ull> p) { manager->foundPrimes(p); }
+        void foundPrimes(std::vector<unsigned long long> p) { manager->foundPrimes(p); }
 
     public:
         SocketManager(ServerLogic*);
@@ -100,7 +102,7 @@ namespace PrimeProcessor{
         // friends
         friend Listener;
         friend ClientHandler;
-    };
-
-    
+    };   
 }
+
+#endif

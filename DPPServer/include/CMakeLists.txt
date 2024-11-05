@@ -1,7 +1,7 @@
 set(Includes 
     "config.h"
-    "MySockets.h"
     "ServerLogic.h"
+    "MySockets.h"
     "Serialization.h"
 )
 

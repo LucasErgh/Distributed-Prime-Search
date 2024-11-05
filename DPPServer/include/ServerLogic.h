@@ -1,19 +1,20 @@
-#pragma once
+#ifndef ServerLogic_h
+#define ServerLogic_h
 
-#include "MySockets.h"
-
+#include <fstream>
 #include <stdexcept>
 
-#include<deque>
-#include<set>
-#include<fstream>
+#include <memory>
+#include <vector>
+#include <deque>
+#include <set>
+
+#include <mutex>
+#include <thread>
 
 namespace PrimeProcessor{
 
-typedef unsigned long long int ull;
-typedef std::array<unsigned long long, 2> Range;
-typedef std::vector<Range> Ranges;
-typedef std::unique_ptr<SocketManager> Manager;
+    class SocketManager;
 
     class ServerLogic{
     private:
@@ -22,18 +23,18 @@ typedef std::unique_ptr<SocketManager> Manager;
         std::fstream rangesSearched;
         std::fstream primesFound;
 
-        Manager manager;
+        std::unique_ptr<SocketManager> manager;
 
-        std::deque<Range> workQueue;
+        std::deque<std::array<unsigned long long, 2>> workQueue;
         std::mutex workQueueMutex;
-        Ranges WIPQueue;
+        std::vector<std::array<unsigned long long, 2>> WIPQueue;
         std::mutex WIPQueueMutex;
 
-        Ranges primesSearched;
+        std::vector<std::array<unsigned long long, 2>> primesSearched;
         std::mutex primesSearchedMutex;
-        ull largestSearched;
+        unsigned long long largestSearched;
 
-        std::set<ull> primes;
+        std::set<unsigned long long> primes;
         std::mutex primesMutex;
 
         // Stores set of primes on drive
@@ -55,10 +56,12 @@ typedef std::unique_ptr<SocketManager> Manager;
         void stop();
 
         // called by the server manager to get the next range to search
-        Range getRange();
+        std::array<unsigned long long, 2> getRange();
 
         // called by the server manager to return ranges found
-        void foundPrimes(std::vector<ull> primes);
+        void foundPrimes(std::vector<unsigned long long> primes);
     };
 
 }
+
+#endif

@@ -4,6 +4,9 @@ set(Dirs
 
 set(Sources 
     "DPPClient.cpp"
+    "ConnectionHandler.cpp"
+    "PrimeSearcher.cpp"
+    "Serialization.cpp"
 )
 
 add_library(src ${Sources})

@@ -6,6 +6,7 @@ set(Sources
     "DPPServer.cpp"
     "MySockets.cpp"
     "ServerLogic.cpp"
+    "Serialization.cpp"
 )
 
 add_library(src ${Sources})

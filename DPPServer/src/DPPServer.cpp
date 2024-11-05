@@ -1,5 +1,5 @@
-#include "MySockets.h"
 #include "ServerLogic.h"
+#include "MySockets.h"
 
 #include <iostream>
 
@@ -11,4 +11,3 @@ int main() {
 
     return 0;
 }
-

@@ -1,5 +1,6 @@
 
 #include "ServerLogic.h"
+#include "MySockets.h"
 
 #include <algorithm>
 
@@ -18,7 +19,7 @@ namespace PrimeProcessor {
         }
 
         // read ranges searched
-        ull min, max;
+        unsigned long long min, max;
         while(!rangesSearched.eof() && !rangesSearched.fail()){
             rangesSearched >> min >> max;
             if(rangesSearched.fail()){
@@ -66,15 +67,14 @@ namespace PrimeProcessor {
         int newSize = (workQueue.size() < 5) ? 10 : workQueue.size() * 2;
         
         //// number of digits per search set
-        // ull max = *primes.end();
+        // unsigned long long max = *primes.end();
         // int searchSize = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
         int searchSize = 100;
 
         for (int i = workQueue.size(); i < newSize; i++){
             workQueue.push_back( {largestSearched + 1, largestSearched + searchSize} );
+            largestSearched = largestSearched + searchSize;
         }
-
-        largestSearched = largestSearched + searchSize;
         workQueueMutex.unlock();
     }
 
@@ -83,17 +83,17 @@ namespace PrimeProcessor {
         primesSearchedMutex.lock();
         workQueueMutex.lock();
 
-        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left.second < right.second;});
+        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left[1] < right[1];});
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
             if ((i+1)->at(0) - i->at(1) <= 1){
-                Range pairUnion = {i->at(0), (i+1)->at(1)};
+                std::array<unsigned long long, 2> pairUnion = {i->at(0), (i+1)->at(1)};
                 primesSearched.erase(i, (i+1));
                 primesSearched.insert((i-1), pairUnion);
                 --i;
             }
             else {
-                Range missing = {(i->at(1)) + 1, (i + 1)->at(0) - 1};
+                std::array<unsigned long long, 2> missing = {(i->at(1)) + 1, (i + 1)->at(0) - 1};
                 workQueue.push_front(missing);
             }
         }
@@ -102,23 +102,25 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    void ServerLogic::foundPrimes(std::vector<ull> p){
+    void ServerLogic::foundPrimes(std::vector<unsigned long long> p){
         // To-Do remove range from WIPQueue
         primesMutex.lock();
         primes.insert(p.begin(), p.end());
         primesMutex.unlock();
     }
 
-    Range ServerLogic::getRange(){
+    std::array<unsigned long long, 2> ServerLogic::getRange(){
         workQueueMutex.lock();
         WIPQueueMutex.lock();
 
-        Range r = workQueue.back();
+        std::array<unsigned long long, 2> r = workQueue.back();
         workQueue.pop_back();
         WIPQueue.push_back(r);
 
         workQueueMutex.unlock();
         WIPQueueMutex.unlock();
+
+        if(workQueue.size() < 10) populateWorkQueue();
 
         return r;
     }

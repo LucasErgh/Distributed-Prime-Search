@@ -2,6 +2,7 @@
 #include "MySockets.h"
 
 #include <iostream>
+#include <iomanip>
 
 namespace PrimeProcessor{
     
@@ -10,37 +11,36 @@ namespace PrimeProcessor{
     void SocketManager::ClientHandler::clientComs(){
         int msgType;
         uint16_t payloadSize;
-        int bytesReceived = 0;
+        int bytesReceived;
 
-        // Send and receive loop for testing
+        // Send and receive loop
         do{
+            bytesReceived = 0;
+            payloadSize = 0;
             // get message header
-            uint8_t header[3];
-            for (int i = 0; i < 3; i++) {
-                iResult = recv(clientSocket, reinterpret_cast<char*>(header) + i, 2 - bytesReceived, 0);
-                if (iResult <= 0){
-                    closesocket(clientSocket);
-                    WSACleanup();
-                    throw std::runtime_error("receive failed: " + WSAGetLastError());
-                }
-                bytesReceived += iResult;
+            iResult = recv(clientSocket, reinterpret_cast<char*>(header), 3, 0);
+            if (iResult <= 0){
+                closesocket(clientSocket);
+                WSACleanup();
+                throw std::runtime_error("receive failed: " + WSAGetLastError());
             }
+            bytesReceived += iResult;
 
             // read msg header and check if client is closing connection
             msgType = readMsg(header, payloadSize);
             if (!msgType) {
                 // To-Do close client connection
                 return;
-            }
+            } 
 
             // get payload size in bytes
-            size_t payloadBytes = payloadSize * sizeof(ull);
+            size_t payloadBytes = payloadSize * sizeof(unsigned long long);
 
             // read payload
-            std::vector<std::byte> payload(payloadBytes);
+            std::vector<std::byte> payload(payloadSize * sizeof(unsigned long long));
             bytesReceived = 0;
-            while(bytesReceived < payloadBytes) {
-                iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()) + bytesReceived, payloadBytes - bytesReceived, 0);
+            if(payloadSize != 0) {
+                iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()), payloadSize*sizeof(unsigned long long), 0);
                 if (iResult < 0) {
                     closesocket(clientSocket);
                     WSACleanup();
@@ -50,48 +50,36 @@ namespace PrimeProcessor{
             }
 
             // deserialize payload and send list to server manager
-            std::vector<ull> primes(payloadSize);
-            if (readMsg(payload, payloadSize, primes)){
+            std::vector<unsigned long long> primes(payloadSize);
+            std::fill(primes.begin(), primes.end(), 0);
+            if (!readMsg(payload, payloadSize, primes)){
                 // To-Do handle deseerialize error
                 closesocket(clientSocket);
                 WSACleanup();
                 throw std::runtime_error("send failed: " + WSAGetLastError());
             }
-            manager->foundPrimes(primes);
+
+            std::cout << "Received following primes from client #" << key << ":\n";
+            for (auto i : primes) 
+                std::cout << i << std::endl; 
+            std::cout << "End of prime list" << std::endl;
+            
+            manager->foundPrimes(primes); 
 
             // send client new range of primes
             lastSent = manager->getRange();
-            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), sizeof(lastSent.data()), 0);
+            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
             if (iSendResult == SOCKET_ERROR){
                 closesocket(clientSocket);
                 WSACleanup();
                 throw std::runtime_error("send failed: " + WSAGetLastError());
             }
+            unsigned long long min, max;
+            memcpy(&min, lastSent.data() + 3, sizeof(unsigned long long));
+            memcpy(&max, lastSent.data() + 11, sizeof(unsigned long long));
+            std::cout << "Sent client search range: (" << min << ", " << max << ")" << std::endl;
             
-            /* test code 
-            iResult = recv(clientSocket, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                std::this_thread::sleep_for(std::chrono::seconds(3));
-
-                std::cout << "Bytes received: " << iResult << std::endl;
-
-                iSendResult = send(clientSocket, recvbuf, iResult, 0);
-
-                if (iSendResult == SOCKET_ERROR) {
-                    closesocket(clientSocket);
-                    WSACleanup();
-                    throw std::runtime_error("send failed: " + WSAGetLastError());
-                }
-                std::cout << "Bytes sent: " << iSendResult << std::endl;
-            }
-            else if (iResult == 0)
-                std::cout << "Connection closing...\n";
-            else {
-                closesocket(clientSocket);
-                throw std::runtime_error("recv failed: " + WSAGetLastError());
-            }
-            */
-        } while (iResult > 0);
+        } while (stop);
     }
 
     SocketManager::ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
