@@ -1,6 +1,7 @@
 #Build and vscode
-*/.vscode
-*/build
+.vscode/*
+build/*
+
 
 # config file
 *config.h

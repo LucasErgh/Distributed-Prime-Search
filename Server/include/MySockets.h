@@ -1,9 +1,9 @@
 #ifndef MySockets_h
 #define MySockets_h
 
-#include "config.h"
 #include "ServerLogic.h"
 #include "Serialization.h"
+#include "config.h"
 
 // Winsock Libraries
 #include <winsock2.h>

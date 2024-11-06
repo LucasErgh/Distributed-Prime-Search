@@ -1,4 +1,0 @@
-Messages will have three parts
-1. one byte that represents the type of message
-2. two bytes that represent the size of the payload
-3. payload of any size that contains list of primes or range to be searched
