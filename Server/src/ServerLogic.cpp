@@ -6,6 +6,21 @@
 
 namespace PrimeProcessor {
  
+    void ServerLogic::returnRange(std::array<unsigned long long, 2> arr){
+        WIPQueueMutex.lock();
+        workQueueMutex.lock();
+
+        auto r = std::find(WIPQueue.begin(), WIPQueue.end(), arr);
+        if(r != WIPQueue.end()){
+            workQueue.push_back(std::array<unsigned long long, 2>(*r));
+            WIPQueue.erase(r);
+        }
+        // To-Do if it doesn't exist in the WIPQueue or the workQueue, remove it from primesSearched if it is within one of those ranges
+
+        WIPQueueMutex.unlock();
+        workQueueMutex.unlock();
+    }
+
     ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::out)){
         // Try to open files
         if(rangesSearched.fail()){

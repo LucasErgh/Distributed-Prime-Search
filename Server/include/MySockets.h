@@ -34,6 +34,7 @@ namespace PrimeProcessor{
             int iSendResult;
             int iResult;
             std::vector<std::byte> lastSent;
+            std::array<unsigned long long, 2> lastRange;
             // To-Do impliment stop function with public method
             bool stop = true;
 
@@ -41,7 +42,12 @@ namespace PrimeProcessor{
 
             ClientHandler(SOCKET& s, SocketManager* m);
 
+            // cloeses conenction with client
+            void closeConnection();
+
+            // loop that communicates with clients
             void clientComs();
+            void commsFailed();
 
             static int nextKey;
             int key;
@@ -60,16 +66,22 @@ namespace PrimeProcessor{
             char recvbuff[DEFAULT_BUFLEN];
             int recvbuflen = DEFAULT_BUFLEN;
 
+            bool closed = false;
+
         public:
             Listener();
             
             // tries to accept a connection
             void createSocket();
+
+            // listens for incomming connections adding them to SocketManager list
             void startListening();
+
+            // Closes listener socket 
+            void closeConnection();
         };
         
-        typedef std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> ClientList;
-        ClientList clientList; // all client actively connected
+        std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
         std::mutex clientListMutex;
 
         Listener listener;
@@ -79,20 +91,27 @@ namespace PrimeProcessor{
         // Called by Listener to add ClientSocket to clientList
         void addClient(SOCKET& c);
 
+        // removes a client from list of workers by key
+        void removeClient(int key);
+        // To-Do determine if I need to overload the removeClient function
+        // void removeClient(std::shared_ptr<ClientHandler>);
+
         ServerLogic *manager;
-        std::vector<std::byte> getRange() { return createMsg(manager->getRange()); }
+        
+        std::array<unsigned long long, 2> getRange() { return manager->getRange(); }
+
         void foundPrimes(std::vector<unsigned long long> p) { manager->foundPrimes(p); }
+        
+        // returns array client was searching to ServerLogic work queue
+        void searchFailed(std::array<unsigned long long, 2>);
 
     public:
         SocketManager(ServerLogic*);
         ~SocketManager();
         
         void start(){
-            try { listener.createSocket(); }
-            catch (const std::runtime_error& e) { throw e; } // propogate error
-            
-            try { listener.startListening(); } // start listener thread
-            catch (const std::runtime_error& e) { throw e; } // propogate error
+            listener.createSocket();
+            listener.startListening();
         }
 
         void stop(){

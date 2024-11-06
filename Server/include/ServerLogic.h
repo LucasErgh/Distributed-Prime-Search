@@ -25,6 +25,8 @@ namespace PrimeProcessor{
 
         std::unique_ptr<SocketManager> manager;
 
+        // To-Do stop with all the mutexes and learn to write good code
+
         std::deque<std::array<unsigned long long, 2>> workQueue;
         std::mutex workQueueMutex;
         std::vector<std::array<unsigned long long, 2>> WIPQueue;
@@ -57,6 +59,9 @@ namespace PrimeProcessor{
 
         // called by the server manager to get the next range to search
         std::array<unsigned long long, 2> getRange();
+
+        // called when client error occurs, range gets moved from WIPQueue to WorkQueue
+        void returnRange(std::array<unsigned long long, 2>);
 
         // called by the server manager to return ranges found
         void foundPrimes(std::vector<unsigned long long> primes);
