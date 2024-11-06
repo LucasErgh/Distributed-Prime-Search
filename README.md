@@ -24,9 +24,10 @@ Since I'm using TCP sockets I serialize each message into a byte array. Each byt
     - Message header\
         - One byte that indicates message type\
         - Two bytes that indicate size of the payload\
-    - Payload, this either contains a list of prime numbers found or a range to be searched. A list of primes can be of any size, a range is going to just be two `unsigned long long`s.\
+    - Payload, this either contains a list of prime numbers found or a range to be searched. A list of primes can be of any size, a range is going to just be two `unsigned long long`s.
 
 ## Future Improvements
+
 This is a work in progress, so there are multiple things I would like to add. This includes:\
     - GUI (w/ win32 or QT) or output formatting (w/ windows.h) to it less of a mess to look at.\
     - A way for the client applications to access the primes found so far, enabling the use of a Seive of Eratosthenes. Either,\
@@ -36,4 +37,4 @@ This is a work in progress, so there are multiple things I would like to add. Th
     - Improve logic for finding prime numbers, i.e. they are always 1+-6n for some integer n.\
     - Change algorithms to stop using mutexs because they're so wasteful.\
     - Think about creating and maintaing client threads before and after the client connects to reduce startup time. \
-    - Learn to use CUDA to do arithmatic on GPU.\
+    - Learn to use CUDA to do arithmatic on GPU.
