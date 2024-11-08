@@ -15,21 +15,9 @@ namespace PrimeProcessor{
         // we can just send the message since we are in in blocking mode be default
         iResult = send(clientSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
         closesocket(clientSocket);
-    }
-
-    void SocketManager::removeClient(int key){
-        std::cout << "4 Removing client: " << key << '\n';
-        clientListMutex.lock();
-        std::cout << "5 Removing client: " << key << '\n';
-        auto i = std::find_if(clientList.begin(), clientList.end(), [key](const auto& pair){ return pair.first->key == key; });
-        if(i != clientList.end()){
-            i->first->closeConnection(); 
-            i->second.join();
-            std::cout << "7 Removed client: " << key << '\n';
-            clientList.erase(i);
-            std::cout << "6 Removed client: " << key << '\n';
-        }
-        clientListMutex.unlock();
+        needsClosedByParent = true;
+        manager->clientsToClose++;
+        manager->closeClientCondition.notify_one();
     }
 
     // returns array client was searching to ServerLogic work queue
@@ -40,7 +28,7 @@ namespace PrimeProcessor{
     void SocketManager::ClientHandler::commsFailed(){
         std::cout << "Client connection unexpectedly closed: " << key << ".\n";
         manager->searchFailed(lastRange);
-        manager->removeClient(key);
+        closeConnection();
     }
 
     void SocketManager::ClientHandler::clientComs(){
@@ -57,8 +45,9 @@ namespace PrimeProcessor{
             iResult = recv(clientSocket, reinterpret_cast<char*>(header), 3, 0);
             if (iResult <= 0){
                 // To-Do
-                if (!currentlyRunning) commsFailed();
+                if (!currentlyRunning) closeConnection();
                 else {commsFailed();}
+                return;
             }
             bytesReceived += iResult;
 
@@ -67,7 +56,8 @@ namespace PrimeProcessor{
             if (!msgType) {
                 // To-Do
                 std::cout << "Received close connection from client: " << key << '\n';
-                commsFailed();
+                closeConnection();
+                return;
             } 
 
             // get payload size in bytes
@@ -80,7 +70,7 @@ namespace PrimeProcessor{
                 iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()), payloadSize*sizeof(unsigned long long), 0);
                 if (iResult < 0) {
                     // To-Do
-                    if (!currentlyRunning) commsFailed();
+                    if (!currentlyRunning) closeConnection();
                     else commsFailed();
                 }
                 bytesReceived += iResult;
@@ -91,8 +81,9 @@ namespace PrimeProcessor{
             std::fill(primes.begin(), primes.end(), 0);
             if (!readMsg(payload, payloadSize, primes)){
                 // To-Do
-                if (!currentlyRunning) commsFailed();
+                if (!currentlyRunning) closeConnection();
                 else commsFailed();
+                return;
             }
 
             // Prints for the sake of testing
@@ -101,28 +92,25 @@ namespace PrimeProcessor{
                 std::cout << i << std::endl; 
             std::cout << "End of prime list" << std::endl;
             
-            manager->foundPrimes(primes); 
+            manager->foundPrimes(primes, lastRange); 
 
             // send client new range of primes
             lastRange = manager->getRange();
             lastSent = createMsg(lastRange);
             iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);        
-            std::cout << "1 Removing client: " << key << '\n';
             if (iSendResult == SOCKET_ERROR){
                 // To-Do
-                std::cout << "3 Removing client: " << key << '\n';
-                if(!currentlyRunning) commsFailed();
+                if(!currentlyRunning) closeConnection();
                 else commsFailed();
+                return;
             }
-            std::cout << "2 Removing client: " << key << '\n';
             unsigned long long min, max;
             memcpy(&min, lastSent.data() + 3, sizeof(unsigned long long));
             memcpy(&max, lastSent.data() + 11, sizeof(unsigned long long));
             std::cout << "Sent client search range: (" << min << ", " << max << ")" << std::endl;
             
         } while (currentlyRunning);
-
-        manager->removeClient(key);
+        closeConnection();
     }
 
     SocketManager::ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
@@ -222,17 +210,44 @@ namespace PrimeProcessor{
         clientListMutex.unlock();
     }
 
+        void SocketManager::start(){
+            listener.createSocket();
+            listenThread = std::thread(&Listener::startListening, &listener);
+            clientClosingThread = std::thread(&SocketManager::threadClosingLoop, this);
+        }
+
     void SocketManager::stop(){
         // close worker and listener sockets 
+        closingSocketManager = true;
         clientListMutex.lock();
         for(auto i = clientList.begin(); i != clientList.end(); ++i){
             i->first->closeConnection();
             i->second.join();
+            clientList.erase(i--);
         }
         clientListMutex.unlock();
         listener.closeConnection();
-        std::cout << ((listenThread.joinable()) ? "joinable: true" : "joinable: false"); 
         listenThread.join();
+        clientsToClose = 0;
+        closeClientCondition.notify_all();
+        clientClosingThread.join();
     }
 
+    void SocketManager::threadClosingLoop(){
+        while (!closingSocketManager){
+            std::unique_lock lock(clientCloseMutex);
+            closeClientCondition.wait(lock);
+            while(clientsToClose){
+                clientListMutex.lock();
+                auto i = std::find_if(clientList.begin(), clientList.end(), [](const auto& pair){ return pair.first->needsClosedByParent == true; });
+                if(i != clientList.end()){
+                    i->first->closeConnection(); 
+                    i->second.join();
+                    clientList.erase(i);
+                }
+                clientListMutex.unlock();
+                clientsToClose--;
+            }
+        }
+    }
 }

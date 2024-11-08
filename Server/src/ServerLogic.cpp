@@ -4,6 +4,8 @@
 
 #include <algorithm>
 
+#include <iostream>
+
 namespace PrimeProcessor {
  
     void ServerLogic::returnRange(std::array<unsigned long long, 2> arr){
@@ -37,11 +39,8 @@ namespace PrimeProcessor {
         unsigned long long min, max;
         while(!rangesSearched.eof() && !rangesSearched.fail()){
             rangesSearched >> min >> max;
-            if(rangesSearched.fail()){
-                primesSearched.push_back( {1, 1} );
-            } else {
+            if(!rangesSearched.fail())
                 primesSearched.push_back( {min, max} );
-            }
         }
         rangesSearched.clear();
 
@@ -64,17 +63,21 @@ namespace PrimeProcessor {
 
     void ServerLogic::stop(){
         manager->stop();
+        primesSearchedMutex.lock();
+        combineRangesBeforeWrite(primesSearched);
         for(const auto& cur : primesSearched){
-            rangesSearched << cur[0] << " " << cur[1];
+            rangesSearched << cur[0] << " " << cur[1] << '\n';
         }
-        storePrimes();
+        primesSearchedMutex.lock();
+        storePrimesInFile();
     }
 
-    void ServerLogic::storePrimes(){
+    void ServerLogic::storePrimesInFile(){
         primesMutex.lock();
         for(const auto& cur : primes){
             primesFound << cur << " " << '\n';
         }
+        primes.clear();
         primesMutex.unlock();
     }
     void ServerLogic::populateWorkQueue(){
@@ -87,10 +90,26 @@ namespace PrimeProcessor {
         int searchSize = 100;
 
         for (int i = workQueue.size(); i < newSize; i++){
-            workQueue.push_back( {largestSearched + 1, largestSearched + searchSize} );
+            workQueue.push_front( {largestSearched + 1, largestSearched + searchSize} );
             largestSearched = largestSearched + searchSize;
         }
         workQueueMutex.unlock();
+    }
+
+    // finds gaps in rangesSearched at the start of the program
+    void ServerLogic::combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r){
+        std::sort(r.begin(), r.end(), [](auto &left, auto &right){return left[1] < right[1];});
+        
+        for(auto i = r.begin(); i != r.end() && (i + 1) != r.end();  i++){
+            if ((i+1)->at(0) - i->at(1) <= 1){
+                std::array<unsigned long long, 2> pairUnion = {i->at(0), (i+1)->at(1)};
+                r.erase(i, (i+1));
+                r.insert((i-1), pairUnion);
+                --i;
+            }
+        }
+
+        std::sort(r.begin(), r.end(), [](auto &left, auto &right){return left[1] < right[1];});
     }
 
     // finds gaps in rangesSearched at the start of the program
@@ -98,14 +117,15 @@ namespace PrimeProcessor {
         primesSearchedMutex.lock();
         workQueueMutex.lock();
 
-        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left[1] < right[1];});
+        std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left[0] < right[0];});
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
-            if ((i+1)->at(0) - i->at(1) <= 1){
+
+            if (((i+1)->at(0) - i->at(1)) <= 1){
                 std::array<unsigned long long, 2> pairUnion = {i->at(0), (i+1)->at(1)};
-                primesSearched.erase(i, (i+1));
-                primesSearched.insert((i-1), pairUnion);
-                --i;
+                i = primesSearched.erase(i, (i+2));
+                i = primesSearched.insert(i, pairUnion);
+                i--;
             }
             else {
                 std::array<unsigned long long, 2> missing = {(i->at(1)) + 1, (i + 1)->at(0) - 1};
@@ -117,8 +137,18 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    void ServerLogic::foundPrimes(std::vector<unsigned long long> p){
+    void ServerLogic::foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r){
         // To-Do remove range from WIPQueue
+        WIPQueueMutex.lock();
+        auto i = std::find_if(WIPQueue.begin(), WIPQueue.end(), [&r](auto &pair){ return pair[0] == r[0] && pair[1] == r[1]; });
+        if(i != WIPQueue.end()){
+            primesSearchedMutex.lock();
+            primesSearched.push_back({(*i)[0], (*i)[1]});
+            primesSearchedMutex.unlock();
+            WIPQueue.erase(i);
+        }
+        WIPQueueMutex.unlock();
+        
         primesMutex.lock();
         primes.insert(p.begin(), p.end());
         primesMutex.unlock();

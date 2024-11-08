@@ -43,7 +43,7 @@ namespace PrimeProcessor{
 
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
-        void storePrimes();
+        void storePrimesInFile();
         
         // populate workQueue when it gets low
         void populateWorkQueue();
@@ -51,6 +51,8 @@ namespace PrimeProcessor{
         // called after ranges searchd text file is read and primesSearched is populated
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         void searchedNormalization();
+
+        void combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r);
 
     public:
         ServerLogic();
@@ -66,7 +68,7 @@ namespace PrimeProcessor{
         void returnRange(std::array<unsigned long long, 2>);
 
         // called by the server manager to return ranges found
-        void foundPrimes(std::vector<unsigned long long> primes);
+        void foundPrimes(std::vector<unsigned long long> primes, std::array<unsigned long long, 2>);
     };
 
 }

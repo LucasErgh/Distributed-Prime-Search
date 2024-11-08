@@ -12,8 +12,8 @@
 
 #include <mutex>
 #include <thread>
-#include <chrono>
 #include <atomic>
+#include <condition_variable>
 
 #include <memory>
 #include <vector>
@@ -51,6 +51,8 @@ namespace PrimeProcessor{
 
             static int nextKey;
             int key;
+
+            std::atomic<bool> needsClosedByParent = false;
         };
 
         class Listener{
@@ -81,6 +83,22 @@ namespace PrimeProcessor{
             void closeConnection();
         };
         
+    public:
+
+        SocketManager(ServerLogic*);
+        ~SocketManager();
+        
+        void start();
+
+        void stop();
+
+        // friends
+        friend Listener;
+        friend ClientHandler;
+
+    private:
+        std::atomic<bool> closingSocketManager = false;
+
         std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
         std::mutex clientListMutex;
 
@@ -101,26 +119,16 @@ namespace PrimeProcessor{
         
         std::array<unsigned long long, 2> getRange() { return manager->getRange(); }
 
-        void foundPrimes(std::vector<unsigned long long> p) { manager->foundPrimes(p); }
+        void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { manager->foundPrimes(p, r); }
         
         // returns array client was searching to ServerLogic work queue
         void searchFailed(std::array<unsigned long long, 2>);
 
-    public:
-
-        SocketManager(ServerLogic*);
-        ~SocketManager();
-        
-        void start(){
-            listener.createSocket();
-            listenThread = std::thread(&Listener::startListening, &listener);
-        }
-
-        void stop();
-
-        // friends
-        friend Listener;
-        friend ClientHandler;
+        void threadClosingLoop();
+        std::atomic<int> clientsToClose = 0;
+        std::thread clientClosingThread;
+        std::condition_variable closeClientCondition;
+        std::mutex clientCloseMutex;
     };   
 }
 
