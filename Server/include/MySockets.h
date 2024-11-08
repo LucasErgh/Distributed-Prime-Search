@@ -13,6 +13,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 #include <memory>
 #include <vector>
@@ -35,8 +36,7 @@ namespace PrimeProcessor{
             int iResult;
             std::vector<std::byte> lastSent;
             std::array<unsigned long long, 2> lastRange;
-            // To-Do impliment stop function with public method
-            bool stop = true;
+            std::atomic_bool currentlyRunning = true;
 
         public:
 
@@ -66,7 +66,7 @@ namespace PrimeProcessor{
             char recvbuff[DEFAULT_BUFLEN];
             int recvbuflen = DEFAULT_BUFLEN;
 
-            bool closed = false;
+            std::atomic_bool closingConnection = false;
 
         public:
             Listener();
@@ -85,6 +85,7 @@ namespace PrimeProcessor{
         std::mutex clientListMutex;
 
         Listener listener;
+        std::thread listenThread;
 
         WSAData wsaData;
 
@@ -106,17 +107,16 @@ namespace PrimeProcessor{
         void searchFailed(std::array<unsigned long long, 2>);
 
     public:
+
         SocketManager(ServerLogic*);
         ~SocketManager();
         
         void start(){
             listener.createSocket();
-            listener.startListening();
+            listenThread = std::thread(&Listener::startListening, &listener);
         }
 
-        void stop(){
-            // To-Do
-        }
+        void stop();
 
         // friends
         friend Listener;

@@ -14,6 +14,11 @@ int main()
 {
     Connection c;
     c.start();
+
+    std::cin.get();
+
+    c.stop();
+
     return 0;
 }
 

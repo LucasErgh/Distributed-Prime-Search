@@ -1,33 +1,33 @@
 
 #include "MySockets.h"
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 
 namespace PrimeProcessor{
-    
+
     int SocketManager::ClientHandler::nextKey = 1;
 
     void SocketManager::ClientHandler::closeConnection(){
         std::vector<std::byte> msg = createMsg();
-        stop = false;
+        currentlyRunning = false;
         // we can just send the message since we are in in blocking mode be default
         iResult = send(clientSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
         closesocket(clientSocket);
     }
 
     void SocketManager::removeClient(int key){
+        std::cout << "4 Removing client: " << key << '\n';
         clientListMutex.lock();
-        for(auto i = clientList.begin(); i != clientList.end(); ++i){
-            if (i->first->key == key){
-                std::shared_ptr<ClientHandler> p = i->first;
-                p->closeConnection();
-                i->second.join();
-                clientList.erase(i);
-                clientListMutex.unlock();
-                return;
-            }
-            std::cout << "Could not remove client, client was not in list.\n";
+        std::cout << "5 Removing client: " << key << '\n';
+        auto i = std::find_if(clientList.begin(), clientList.end(), [key](const auto& pair){ return pair.first->key == key; });
+        if(i != clientList.end()){
+            i->first->closeConnection(); 
+            i->second.join();
+            std::cout << "7 Removed client: " << key << '\n';
+            clientList.erase(i);
+            std::cout << "6 Removed client: " << key << '\n';
         }
         clientListMutex.unlock();
     }
@@ -38,12 +38,10 @@ namespace PrimeProcessor{
     }
 
     void SocketManager::ClientHandler::commsFailed(){
-        std::cout << "Connection failed with client: " << key << ". Closing connection.\n";
+        std::cout << "Client connection unexpectedly closed: " << key << ".\n";
         manager->searchFailed(lastRange);
         manager->removeClient(key);
     }
-
-    // To-Do impliment better error handling that doesn't always close the connection
 
     void SocketManager::ClientHandler::clientComs(){
         int msgType;
@@ -54,17 +52,22 @@ namespace PrimeProcessor{
         do{
             bytesReceived = 0;
             payloadSize = 0;
+            
             // get message header
             iResult = recv(clientSocket, reinterpret_cast<char*>(header), 3, 0);
-            if (iResult <= 0)
-                if (!stop) commsFailed();
+            if (iResult <= 0){
+                // To-Do
+                if (!currentlyRunning) commsFailed();
+                else {commsFailed();}
+            }
             bytesReceived += iResult;
 
             // read msg header and check if client is closing connection
             msgType = readMsg(header, payloadSize);
             if (!msgType) {
+                // To-Do
                 std::cout << "Received close connection from client: " << key << '\n';
-                manager->removeClient(key);
+                commsFailed();
             } 
 
             // get payload size in bytes
@@ -76,8 +79,9 @@ namespace PrimeProcessor{
             if(payloadSize != 0) {
                 iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()), payloadSize*sizeof(unsigned long long), 0);
                 if (iResult < 0) {
-                    if (!stop) commsFailed();
-                    else manager->removeClient(key);
+                    // To-Do
+                    if (!currentlyRunning) commsFailed();
+                    else commsFailed();
                 }
                 bytesReceived += iResult;
             }
@@ -86,10 +90,12 @@ namespace PrimeProcessor{
             std::vector<unsigned long long> primes(payloadSize);
             std::fill(primes.begin(), primes.end(), 0);
             if (!readMsg(payload, payloadSize, primes)){
-                if (!stop) commsFailed();
-                else manager->removeClient(key);
+                // To-Do
+                if (!currentlyRunning) commsFailed();
+                else commsFailed();
             }
 
+            // Prints for the sake of testing
             std::cout << "Received following primes from client #" << key << ":\n";
             for (auto i : primes) 
                 std::cout << i << std::endl; 
@@ -100,24 +106,28 @@ namespace PrimeProcessor{
             // send client new range of primes
             lastRange = manager->getRange();
             lastSent = createMsg(lastRange);
-            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
+            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);        
+            std::cout << "1 Removing client: " << key << '\n';
             if (iSendResult == SOCKET_ERROR){
-                if(!stop) commsFailed();
-                else manager->removeClient(key);
+                // To-Do
+                std::cout << "3 Removing client: " << key << '\n';
+                if(!currentlyRunning) commsFailed();
+                else commsFailed();
             }
+            std::cout << "2 Removing client: " << key << '\n';
             unsigned long long min, max;
             memcpy(&min, lastSent.data() + 3, sizeof(unsigned long long));
             memcpy(&max, lastSent.data() + 11, sizeof(unsigned long long));
             std::cout << "Sent client search range: (" << min << ", " << max << ")" << std::endl;
             
-        } while (stop);
+        } while (currentlyRunning);
 
         manager->removeClient(key);
     }
 
     SocketManager::ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
     
-    SocketManager::Listener::Listener(){}
+    SocketManager::Listener::Listener() {}
 
     void SocketManager::Listener::createSocket(){
         // Initialize SOCKET object
@@ -130,7 +140,7 @@ namespace PrimeProcessor{
         // Resolve address
         iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
         if (iResult != 0){
-            if (closed) return;
+            if (closingConnection) return;
             else throw std::runtime_error("Get address info failed with error: " + WSAGetLastError());
         }
 
@@ -138,7 +148,7 @@ namespace PrimeProcessor{
         listenerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
         if (listenerSocket == INVALID_SOCKET) {
             freeaddrinfo(result);
-            if (closed) return;
+            if (closingConnection) return;
             else throw std::runtime_error("Failed to create listener socket with error: " + WSAGetLastError());
         }
     }
@@ -149,14 +159,14 @@ namespace PrimeProcessor{
         if (iResult == SOCKET_ERROR) {
             freeaddrinfo(result);
             closesocket(listenerSocket);
-            if (closed) return;
+            if (closingConnection) return;
             else throw std::runtime_error("Bind failed with error: " + WSAGetLastError());
         }
 
         // Start listening
         if (listen(listenerSocket, SOMAXCONN) == SOCKET_ERROR){
             closesocket(listenerSocket);
-            if (closed) return;
+            if (closingConnection) return;
             else throw std::runtime_error("listen() failed with error: " + WSAGetLastError());
         }
 
@@ -167,19 +177,20 @@ namespace PrimeProcessor{
             
             // handle failed connection
             if (clientSocket == INVALID_SOCKET) {
+                if (closingConnection) break;
                 closesocket(listenerSocket);
-                if (closed) return;
-                else throw std::runtime_error("Accept connection failed with error: " + WSAGetLastError());
+                throw std::runtime_error("Accept connection failed with error: " + WSAGetLastError());
             }
             
             // handle successful connection
             try { manager->addClient(clientSocket); }
             catch (const std::runtime_error& e) { throw e; }
+            clientSocket = INVALID_SOCKET;
         }
     }
 
     void SocketManager::Listener::closeConnection(){
-        closed = true;
+        closingConnection = true;
         closesocket(listenerSocket);
         if(clientSocket != INVALID_SOCKET) closesocket(clientSocket);
         return;
@@ -199,16 +210,6 @@ namespace PrimeProcessor{
     }
 
     SocketManager::~SocketManager(){
-        // close worker and listener sockets 
-        clientListMutex.lock();
-        for(auto i = clientList.begin(); i != clientList.end(); ++i){
-            i->first->closeConnection();
-            i->second.join();
-            clientList.erase(i);
-        }
-        clientListMutex.unlock();
-        listener.closeConnection();
-
         // Clean WinSock resources
         WSACleanup();
     }
@@ -219,6 +220,19 @@ namespace PrimeProcessor{
         std::thread cThread(ClientHandler::clientComs, client);
         clientList.emplace_back(std::move(client), std::move(cThread));
         clientListMutex.unlock();
+    }
+
+    void SocketManager::stop(){
+        // close worker and listener sockets 
+        clientListMutex.lock();
+        for(auto i = clientList.begin(); i != clientList.end(); ++i){
+            i->first->closeConnection();
+            i->second.join();
+        }
+        clientListMutex.unlock();
+        listener.closeConnection();
+        std::cout << ((listenThread.joinable()) ? "joinable: true" : "joinable: false"); 
+        listenThread.join();
     }
 
 }

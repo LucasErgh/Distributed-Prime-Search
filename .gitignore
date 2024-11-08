@@ -1,10 +1,10 @@
 #Build and vscode
-.vscode/*
+/.vscode/*
 build/*
 
 
-# config file
-*config.h
+# config file If I add sensative data I'll add it back
+# *config.h 
 
 # VSCode
 .vscode/*

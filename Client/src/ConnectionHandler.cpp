@@ -4,6 +4,8 @@
 #include <iostream>
 #include <iomanip>
 
+std::thread Connection::connectionThread;
+
 // contains communication loop with server
 void Connection::serverComms(){
     int msgType;
@@ -133,9 +135,13 @@ void Connection::connectToServer(){
 // start connection with server
 void Connection::start(){
     connectToServer();
-    serverComms();
+    Connection::connectionThread = std::thread(serverComms, this);
 }
 // close connection with server
 void Connection::stop(){
-
+    std::vector<std::byte> msg = createMsg();
+    closingConnection = true;
+    iResult = send(serverSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
+    closesocket(serverSocket);
+    serverSocket = INVALID_SOCKET;
 }

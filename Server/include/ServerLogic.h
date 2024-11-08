@@ -18,6 +18,7 @@ namespace PrimeProcessor{
 
     class ServerLogic{
     private:
+
         const std::string rangeFile = "Ranges_Searched.txt";
         const std::string primeFile = "Primes_Found.txt";
         std::fstream rangesSearched;
@@ -25,10 +26,11 @@ namespace PrimeProcessor{
 
         std::unique_ptr<SocketManager> manager;
 
-        // To-Do stop with all the mutexes and learn to write good code
+        // To-Do Try to consider using atomic variables rather than mutexs
 
         std::deque<std::array<unsigned long long, 2>> workQueue;
         std::mutex workQueueMutex;
+
         std::vector<std::array<unsigned long long, 2>> WIPQueue;
         std::mutex WIPQueueMutex;
 

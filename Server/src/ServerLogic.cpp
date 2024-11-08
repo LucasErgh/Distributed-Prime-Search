@@ -54,7 +54,7 @@ namespace PrimeProcessor {
     }
 
     ServerLogic::~ServerLogic(){
-        stop();
+        
     }
 
     bool ServerLogic::start(){
