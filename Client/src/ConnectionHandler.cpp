@@ -6,6 +6,10 @@
 
 std::thread Connection::connectionThread;
 
+void Connection::closeConnection(){
+    
+}
+
 // contains communication loop with server
 void Connection::serverComms(){
     int msgType;
