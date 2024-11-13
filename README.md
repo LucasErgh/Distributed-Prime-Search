@@ -47,5 +47,3 @@ This is a work in progress, so there are multiple things I would like to add. Th
 * Improve logic for finding prime numbers, i.e. they are always 1+-6n for some integer n.
 * Change algorithms to stop using mutexs because they're so wasteful.
 * Think about creating and maintaing client threads before and after the client connects to reduce startup time. 
-* Learn to use CUDA to do arithmatic on GPU.
-* Include better error handling.
