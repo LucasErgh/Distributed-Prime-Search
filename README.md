@@ -1,4 +1,4 @@
-# Finding Prime Numbers With Distributed Parallel Processing (_WIP_)
+# Distributed Prime Search (_WIP_)
 
 Program with basic server-client relationship that handles multiple connections. Distrubutes ranges of numbers to
 search across clients who then send back lists of prime numbers found within those ranges.
