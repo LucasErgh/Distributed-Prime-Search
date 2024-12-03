@@ -7,9 +7,9 @@
 
 namespace PrimeProcessor{
 
-    int SocketManager::ClientHandler::nextKey = 1;
+    int ClientHandler::nextKey = 1;
 
-    void SocketManager::ClientHandler::closeConnection(){
+    void ClientHandler::closeConnection(){
         std::vector<std::byte> msg = createMsg();
         currentlyRunning = false;
         // we can just send the message since we are in in blocking mode be default
@@ -25,13 +25,13 @@ namespace PrimeProcessor{
         manager->returnRange(arr);
     }
 
-    void SocketManager::ClientHandler::commsFailed(){
+    void ClientHandler::commsFailed(){
         std::cout << "Client connection unexpectedly closed: " << key << ".\n";
         manager->searchFailed(lastRange);
         closeConnection();
     }
 
-    void SocketManager::ClientHandler::clientComs(){
+    void ClientHandler::clientComs(){
         int msgType;
         uint16_t payloadSize;
         int bytesReceived;
@@ -113,11 +113,11 @@ namespace PrimeProcessor{
         closeConnection();
     }
 
-    SocketManager::ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
+    ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
     
-    SocketManager::Listener::Listener() {}
+    Listener::Listener() {}
 
-    void SocketManager::Listener::createSocket(){
+    void Listener::createSocket(){
         // Initialize SOCKET object
         ZeroMemory(&hints, sizeof(hints)); // WinBase.h macro fills memory to zero
         hints.ai_family = AF_INET; // IPv4 adress
@@ -141,7 +141,7 @@ namespace PrimeProcessor{
         }
     }
 
-    void SocketManager::Listener::startListening(){
+    void Listener::startListening(){
         // bind listener 
         iResult = bind(listenerSocket, result->ai_addr, (int)result->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
@@ -177,7 +177,7 @@ namespace PrimeProcessor{
         }
     }
 
-    void SocketManager::Listener::closeConnection(){
+    void Listener::closeConnection(){
         closingConnection = true;
         closesocket(listenerSocket);
         if(clientSocket != INVALID_SOCKET) closesocket(clientSocket);
@@ -213,7 +213,7 @@ namespace PrimeProcessor{
     void SocketManager::start(){
         listener.createSocket();
         listenThread = std::thread(&Listener::startListening, &listener);
-        clientClosingThread = std::thread(&SocketManager::threadClosingLoop, *this);
+        clientClosingThread = std::thread(&SocketManager::threadClosingLoop, this);
     }
 
     void SocketManager::stop(){
