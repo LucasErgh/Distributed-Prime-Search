@@ -218,6 +218,7 @@ namespace PrimeProcessor{
 
     void SocketManager::stop(){
         // close worker and listener sockets 
+        closingSocketManager = true;
         listener.closeConnection();
         listenThread.join();
 
@@ -229,8 +230,6 @@ namespace PrimeProcessor{
         clientListMutex.unlock();
 
         closeClientCondition.notify_all();
-
-        closingSocketManager = true;
         while(!clientClosingThread.joinable()){
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             closeClientCondition.notify_all();

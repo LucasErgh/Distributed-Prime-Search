@@ -31,10 +31,10 @@ namespace PrimeProcessor{
         std::deque<std::array<unsigned long long, 2>> workQueue;
         std::mutex workQueueMutex;
 
-        std::vector<std::array<unsigned long long, 2>> WIPQueue;
+        std::deque<std::array<unsigned long long, 2>> WIPQueue;
         std::mutex WIPQueueMutex;
 
-        std::vector<std::array<unsigned long long, 2>> primesSearched;
+        std::deque<std::array<unsigned long long, 2>> primesSearched;
         std::mutex primesSearchedMutex;
         unsigned long long largestSearched;
 
@@ -45,6 +45,8 @@ namespace PrimeProcessor{
         // Called when Prime set gets too big or the server is closing
         void storePrimesInFile();
         
+        void storeRangesInFile();
+        
         // populate workQueue when it gets low
         void populateWorkQueue();
 
@@ -52,7 +54,7 @@ namespace PrimeProcessor{
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         void searchedNormalization();
 
-        void combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r);
+        void combineRangesBeforeWrite(std::deque<std::array<unsigned long long, 2>> &r);
 
     public:
         ServerLogic();
