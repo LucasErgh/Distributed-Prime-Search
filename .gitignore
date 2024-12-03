@@ -1,7 +1,10 @@
+# Files to store prime numbers and ranges searched in
+*Ranges_Searched.txt
+*Primes_Found.txt
+
 #Build and vscode
 /.vscode/*
 build/*
-
 
 # config file If I add sensative data I'll add it back
 # *config.h 
