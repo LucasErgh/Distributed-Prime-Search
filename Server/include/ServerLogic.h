@@ -19,8 +19,8 @@ namespace PrimeProcessor{
     class ServerLogic{
     private:
 
-        const std::string rangeFile = "Ranges_Searched.txt";
-        const std::string primeFile = "Primes_Found.txt";
+        const std::string rangeFile = "../Ranges_Searched.txt";
+        const std::string primeFile = "../Primes_Found.txt";
         std::fstream rangesSearched;
         std::fstream primesFound;
 
@@ -38,7 +38,7 @@ namespace PrimeProcessor{
         std::mutex primesSearchedMutex;
         unsigned long long largestSearched;
 
-        std::set<unsigned long long> primes;
+        std::vector<unsigned long long> primes;
         std::mutex primesMutex;
 
         // Stores set of primes on drive

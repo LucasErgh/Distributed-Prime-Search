@@ -32,7 +32,7 @@ void Connection::serverComms(){
         if(iSendResult == SOCKET_ERROR){
             closesocket(serverSocket);
             WSACleanup();
-            throw std::runtime_error("send failed: " + WSAGetLastError());
+            std::cout << "send failed: " << std::endl;
         }
 
         // get message header
@@ -40,7 +40,7 @@ void Connection::serverComms(){
         if (iResult <= 0){
             closesocket(serverSocket);
             WSACleanup();
-            throw std::runtime_error("receive failed: " + WSAGetLastError());
+            std::cout << "receive failed: " << std::endl;
         }
 
          // read msg header and check if client is closing connection
@@ -59,7 +59,7 @@ void Connection::serverComms(){
             if (iResult < 0) {
                 closesocket(serverSocket);
                 WSACleanup();
-                throw std::runtime_error("deserialize failed: " + WSAGetLastError());
+                std::cout << "deserialize failed: " << std::endl;
             }
             bytesReceived += iResult;
 
@@ -68,7 +68,7 @@ void Connection::serverComms(){
                 // To-Do handle deseerialize error
                 closesocket(serverSocket);
                 WSACleanup();
-                throw std::runtime_error("send failed: " + WSAGetLastError());
+                std::cout << "send failed: " << std::endl;
             }
             std::cout << "Received work range: (" << range[0] << ", " << range[1] << ")" << std::endl; 
             worker.newRange(range);
@@ -86,7 +86,7 @@ Connection::Connection(){
     int iResult;
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
-        throw std::runtime_error("WSAStartup Failed: " + WSAGetLastError());
+        std::cout << "WSAStartup Failed: " << std::endl;
     }
 }
 
@@ -103,7 +103,7 @@ void Connection::connectToServer(){
     iResult = getaddrinfo(DEFAULT_ADDRESS, DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         WSACleanup();
-        throw std::runtime_error("getaddrinfo failed: " + WSAGetLastError());
+        std::cout << "getaddrinfo failed: " << std::endl;
     }
 
     // call the socket function to create a socket and then assign that value to ConnectSocket
@@ -117,7 +117,7 @@ void Connection::connectToServer(){
     if (serverSocket == INVALID_SOCKET) {
         freeaddrinfo(result);
         WSACleanup();
-        throw std::runtime_error("socket() failed: " + WSAGetLastError());
+        std::cout << "socket() failed: " << std::endl;
     }
 
     // Connect to server.
@@ -125,14 +125,14 @@ void Connection::connectToServer(){
     if (iResult == SOCKET_ERROR) {
         closesocket(serverSocket);
         serverSocket = INVALID_SOCKET;
-        throw std::runtime_error("failed to connect to server: " + WSAGetLastError());
+        std::cout << "failed to connect to server: " << std::endl;
     }
 
     freeaddrinfo(result);
 
     if (serverSocket == INVALID_SOCKET) {
         WSACleanup();
-        throw std::runtime_error("failed to connect to server: " + WSAGetLastError());
+        std::cout << "Failed to connect to server";
     }
 }
 
@@ -148,4 +148,5 @@ void Connection::stop(){
     iResult = send(serverSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
     closesocket(serverSocket);
     serverSocket = INVALID_SOCKET;
+    connectionThread.join();
 }

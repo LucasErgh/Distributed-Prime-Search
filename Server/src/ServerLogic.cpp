@@ -23,7 +23,7 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::out)){
+    ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::app)){
         // Try to open files
         if(rangesSearched.fail()){
             rangesSearched.clear();
@@ -41,20 +41,21 @@ namespace PrimeProcessor {
             rangesSearched >> min >> max;
             if(!rangesSearched.fail())
                 primesSearched.push_back( {min, max} );
+            else primesSearched.push_back( {1, 1});
         }
         rangesSearched.clear();
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         searchedNormalization();
 
-        largestSearched = primesSearched.back()[1];
+        if (!primesSearched.empty())
+            largestSearched = primesSearched.back()[1];
+        else largestSearched = 0;
 
         populateWorkQueue();
     }
 
-    ServerLogic::~ServerLogic(){
-        
-    }
+    ServerLogic::~ServerLogic(){}
 
     bool ServerLogic::start(){
         manager->start();
@@ -65,10 +66,11 @@ namespace PrimeProcessor {
         manager->stop();
         primesSearchedMutex.lock();
         combineRangesBeforeWrite(primesSearched);
-        for(const auto& cur : primesSearched){
-            rangesSearched << cur[0] << " " << cur[1] << '\n';
-        }
-        primesSearchedMutex.lock();
+        if (!primesSearched.empty())
+            for(const auto& cur : primesSearched)
+                rangesSearched << cur[0] << " " << cur[1] << '\n';
+        rangesSearched.close();
+        primesSearchedMutex.unlock();
         storePrimesInFile();
     }
 
@@ -76,10 +78,13 @@ namespace PrimeProcessor {
         primesMutex.lock();
         for(const auto& cur : primes){
             primesFound << cur << " " << '\n';
+            if (!primesFound) {
+                std::cerr << "Error writing to file!" << std::endl;
+            }
         }
-        primes.clear();
         primesMutex.unlock();
     }
+
     void ServerLogic::populateWorkQueue(){
         workQueueMutex.lock();
         int newSize = (workQueue.size() < 5) ? 10 : workQueue.size() * 2;
@@ -150,7 +155,7 @@ namespace PrimeProcessor {
         WIPQueueMutex.unlock();
         
         primesMutex.lock();
-        primes.insert(p.begin(), p.end());
+        primes.insert(primes.end(), p.begin(), p.end());
         primesMutex.unlock();
     }
 

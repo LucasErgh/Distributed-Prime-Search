@@ -20,10 +20,10 @@
 #include <utility>
 #include <stdexcept>
 
+
 namespace PrimeProcessor{
 
-    class SocketManager{
-    private:
+    namespace{
 
         class ClientHandler{
         public:
@@ -82,7 +82,11 @@ namespace PrimeProcessor{
             // Closes listener socket 
             void closeConnection();
         };
-        
+
+
+    }
+
+    class SocketManager{
     public:
 
         SocketManager(ServerLogic*);

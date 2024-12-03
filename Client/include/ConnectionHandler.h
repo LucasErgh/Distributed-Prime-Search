@@ -41,7 +41,5 @@ public:
     // close connection with server
     void stop();
 
-    void closeConnection(){
-        
-    }
+    void closeConnection();
 };

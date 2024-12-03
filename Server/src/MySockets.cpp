@@ -14,10 +14,10 @@ namespace PrimeProcessor{
         currentlyRunning = false;
         // we can just send the message since we are in in blocking mode be default
         iResult = send(clientSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
-        closesocket(clientSocket);
         needsClosedByParent = true;
         manager->clientsToClose++;
-        manager->closeClientCondition.notify_one();
+        manager->closeClientCondition.notify_all();
+        closesocket(clientSocket);
     }
 
     // returns array client was searching to ServerLogic work queue
@@ -210,34 +210,41 @@ namespace PrimeProcessor{
         clientListMutex.unlock();
     }
 
-        void SocketManager::start(){
-            listener.createSocket();
-            listenThread = std::thread(&Listener::startListening, &listener);
-            clientClosingThread = std::thread(&SocketManager::threadClosingLoop, this);
-        }
+    void SocketManager::start(){
+        listener.createSocket();
+        listenThread = std::thread(&Listener::startListening, &listener);
+        clientClosingThread = std::thread(&SocketManager::threadClosingLoop, *this);
+    }
 
     void SocketManager::stop(){
         // close worker and listener sockets 
-        closingSocketManager = true;
-        clientListMutex.lock();
-        for(auto i = clientList.begin(); i != clientList.end(); ++i){
-            i->first->closeConnection();
-            i->second.join();
-            clientList.erase(i--);
-        }
-        clientListMutex.unlock();
         listener.closeConnection();
         listenThread.join();
-        clientsToClose = 0;
+
+        clientListMutex.lock();
+        for (auto& cur : clientList){
+            cur.first->needsClosedByParent = true;
+            ++clientsToClose;
+        }
+        clientListMutex.unlock();
+
         closeClientCondition.notify_all();
+
+        closingSocketManager = true;
+        while(!clientClosingThread.joinable()){
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            closeClientCondition.notify_all();
+        }
         clientClosingThread.join();
     }
 
     void SocketManager::threadClosingLoop(){
         while (!closingSocketManager){
             std::unique_lock lock(clientCloseMutex);
+
             closeClientCondition.wait(lock);
-            while(clientsToClose){
+            
+            while(clientsToClose != 0){
                 clientListMutex.lock();
                 auto i = std::find_if(clientList.begin(), clientList.end(), [](const auto& pair){ return pair.first->needsClosedByParent == true; });
                 if(i != clientList.end()){
@@ -246,7 +253,7 @@ namespace PrimeProcessor{
                     clientList.erase(i);
                 }
                 clientListMutex.unlock();
-                clientsToClose--;
+                --clientsToClose;
             }
         }
     }
