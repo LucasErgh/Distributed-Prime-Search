@@ -1,6 +1,7 @@
 
 #include "ServerLogic.h"
 #include "MySockets.h"
+#include "FileIO.h"
 
 #include <algorithm>
 
@@ -25,35 +26,12 @@ namespace PrimeProcessor {
     }
 
     ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::app)){
-        // Try to open files
-        if(rangesSearched.fail()){
-            rangesSearched.clear();
-            rangesSearched.open(rangeFile, std::ios::out);
-            if(rangesSearched.fail())
-                throw std::runtime_error("Failed to open " + rangeFile + '\n');
-        }
-        if(primesFound.fail()){
-            throw std::runtime_error("Failed to open " + primeFile + '\n');
-        }
-
-        // read ranges searched
-        unsigned long long min, max;
-        while(!rangesSearched.eof() && !rangesSearched.fail()){
-            rangesSearched >> min >> max;
-            if(!rangesSearched.fail())
-                primesSearched.push_back( {min, max} );
-        }
-        if (primesSearched.empty())
-            primesSearched.push_back({1, 1});
-
-        rangesSearched.clear();
-        rangesSearched.close();
+        // read data from file
+        readIn(rangesSearched, primesFound, primesSearched);
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         searchedNormalization();
-
         largestSearched = primesSearched.back()[1];
-
         populateWorkQueue();
     }
 
@@ -66,40 +44,20 @@ namespace PrimeProcessor {
 
     void ServerLogic::stop(){
         manager->stop();
-        storeRangesInFile();
-        storePrimesInFile();
+        storeToFile();
+        primesFound.close();
         if(!primesMutex.try_lock() || !primesSearchedMutex.try_lock()){
             throw "no no no";
         }
     }
 
-    void ServerLogic::storeRangesInFile(){
-        rangesSearched.open(rangeFile, std::ios::out | std::ios::trunc);
-        if(rangesSearched.fail()){
-            throw "Fail";
-        }
-        primesSearchedMutex.lock();
+    void ServerLogic::storeToFile(){
         combineRangesBeforeWrite(primesSearched);
-        for(auto cur : primesSearched){
-            rangesSearched << cur[0] << " " << cur[1] << '\n';
-        }
-        rangesSearched.close();
-        primesSearched.clear();
-        primesSearched.shrink_to_fit();
+        primesSearchedMutex.lock();
+        writeRangesSearched(rangesSearched, primesSearched);
         primesSearchedMutex.unlock();
-    }
-
-    void ServerLogic::storePrimesInFile(){
         primesMutex.lock();
-        for(const auto& cur : primes){
-            primesFound << cur << " " << '\n';
-            if (!primesFound) {
-                std::cerr << "Error writing to file!" << std::endl;
-            }
-        }
-        primesFound.close();
-        primes.clear();
-        primes.shrink_to_fit();
+        writePrimesFound(primesFound, primes);
         primesMutex.unlock();
     }
 

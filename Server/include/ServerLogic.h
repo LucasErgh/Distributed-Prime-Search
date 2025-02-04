@@ -43,9 +43,7 @@ namespace PrimeProcessor{
 
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
-        void storePrimesInFile();
-        
-        void storeRangesInFile();
+        void storeToFile();
         
         // populate workQueue when it gets low
         void populateWorkQueue();
