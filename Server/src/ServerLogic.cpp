@@ -84,8 +84,7 @@ namespace PrimeProcessor {
         std::deque<std::array<unsigned long long, 2>> mergedRanges;        
 
         std::sort(r.begin(), r.end(), [](auto &left, auto &right){return left[1] < right[1];});
-        
-        
+
         for(const auto &cur : r){
             if(mergedRanges.empty()){
                 mergedRanges.push_back(cur);
