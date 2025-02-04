@@ -52,10 +52,12 @@ namespace PrimeProcessor {
     }
 
     void ServerLogic::storeToFile(){
+
         combineRangesBeforeWrite(primesSearched);
         primesSearchedMutex.lock();
         writeRangesSearched(rangesSearched, primesSearched);
         primesSearchedMutex.unlock();
+
         primesMutex.lock();
         writePrimesFound(primesFound, primes);
         primesMutex.unlock();
