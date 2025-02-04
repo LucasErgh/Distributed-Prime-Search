@@ -42,12 +42,12 @@ namespace PrimeProcessor {
             rangesSearched >> min >> max;
             if(!rangesSearched.fail())
                 primesSearched.push_back( {min, max} );
-            else if (primesSearched.empty())primesSearched.push_back( {1, 1});
         }
+        if (primesSearched.empty())
+            primesSearched.push_back({1, 1});
+
         rangesSearched.clear();
-
         rangesSearched.close();
-
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         searchedNormalization();
