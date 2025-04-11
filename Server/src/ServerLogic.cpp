@@ -1,15 +1,15 @@
 
 #include "ServerLogic.h"
-#include "MySockets.h"
 #include "FileIO.h"
 
 #include <algorithm>
+#include <array>
 
 #include <iostream>
 
 namespace PrimeProcessor {
  
-    void ServerLogic::returnRange(std::array<unsigned long long, 2> arr){
+    void ServerLogic::workFailed(std::array<unsigned long long, 2> arr){
         WIPQueueMutex.lock();
         workQueueMutex.lock();
 
@@ -25,7 +25,13 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    ServerLogic::ServerLogic(): manager(new SocketManager(this)), rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::app)){
+    ServerLogic::ServerLogic(): rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::app)){
+
+    }
+
+    ServerLogic::~ServerLogic(){}
+
+    bool ServerLogic::start(){
         // read data from file
         readIn(rangesSearched, primesFound, primesSearched);
 
@@ -33,17 +39,10 @@ namespace PrimeProcessor {
         searchedNormalization();
         largestSearched = primesSearched.back()[1];
         populateWorkQueue();
-    }
-
-    ServerLogic::~ServerLogic(){}
-
-    bool ServerLogic::start(){
-        manager->start();
         return true;
     }
 
     void ServerLogic::stop(){
-        manager->stop();
         storeToFile();
         primesFound.close();
         if(!primesMutex.try_lock() || !primesSearchedMutex.try_lock()){
@@ -121,7 +120,7 @@ namespace PrimeProcessor {
         workQueueMutex.unlock();
     }
 
-    void ServerLogic::foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r){
+    void ServerLogic::primesReceived(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r){
         // To-Do remove range from WIPQueue
         WIPQueueMutex.lock();
         auto i = std::find_if(WIPQueue.begin(), WIPQueue.end(), [&r](auto &pair){ return pair[0] == r[0] && pair[1] == r[1]; });
@@ -138,7 +137,7 @@ namespace PrimeProcessor {
         primesMutex.unlock();
     }
 
-    std::array<unsigned long long, 2> ServerLogic::getRange(){
+    std::array<unsigned long long, 2> ServerLogic::requestWork(){
         workQueueMutex.lock();
         WIPQueueMutex.lock();
 

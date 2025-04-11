@@ -22,7 +22,7 @@ namespace PrimeProcessor{
 
     // returns array client was searching to ServerLogic work queue
     void SocketManager::searchFailed(std::array<unsigned long long, 2> arr){
-        manager->returnRange(arr);
+        server.workFailed(arr);
     }
 
     void ClientHandler::commsFailed(){
@@ -95,7 +95,7 @@ namespace PrimeProcessor{
             manager->foundPrimes(primes, lastRange); 
 
             // send client new range of primes
-            lastRange = manager->getRange();
+            lastRange = manager->requestWork();
             lastSent = createMsg(lastRange);
             iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);        
             if (iSendResult == SOCKET_ERROR){
@@ -184,7 +184,7 @@ namespace PrimeProcessor{
         return;
     }
 
-    SocketManager::SocketManager(ServerLogic* s) : manager(s){
+    SocketManager::SocketManager(ServerInterface& s) : server(s){
         // Initialize WinSock
         WSAData wsaData;
         int iResult;

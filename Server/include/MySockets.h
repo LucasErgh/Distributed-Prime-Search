@@ -1,7 +1,7 @@
 #ifndef MySockets_h
 #define MySockets_h
 
-#include "ServerLogic.h"
+#include "ServerInterface.h"
 #include "Serialization.h"
 #include "config.h"
 
@@ -20,76 +20,72 @@
 #include <utility>
 #include <stdexcept>
 
-
 namespace PrimeProcessor{
 
-    namespace{
+    class SocketManager;
 
-        class ClientHandler{
-        public:
-            SocketManager* manager;
+    class ClientHandler{
+    public:
+        SocketManager* manager;
 
-            SOCKET clientSocket;
+        SOCKET clientSocket;
 
-            uint8_t header[3];
-            int iSendResult;
-            int iResult;
-            std::vector<std::byte> lastSent;
-            std::array<unsigned long long, 2> lastRange;
-            std::atomic_bool currentlyRunning = true;
+        uint8_t header[3];
+        int iSendResult;
+        int iResult;
+        std::vector<std::byte> lastSent;
+        std::array<unsigned long long, 2> lastRange;
+        std::atomic_bool currentlyRunning = true;
 
-        public:
+    public:
 
-            ClientHandler(SOCKET& s, SocketManager* m);
+        ClientHandler(SOCKET& s, SocketManager* m);
 
-            // cloeses conenction with client
-            void closeConnection();
+        // cloeses conenction with client
+        void closeConnection();
 
-            // loop that communicates with clients
-            void clientComs();
-            void commsFailed();
+        // loop that communicates with clients
+        void clientComs();
+        void commsFailed();
 
-            static int nextKey;
-            int key;
+        static int nextKey;
+        int key;
 
-            std::atomic<bool> needsClosedByParent = false;
-        };
+        std::atomic<bool> needsClosedByParent = false;
+    };
 
-        class Listener{
-        public:
-            SocketManager* manager;
-            
-            SOCKET listenerSocket = INVALID_SOCKET;
-            SOCKET clientSocket = INVALID_SOCKET;
-            
-            addrinfo *result = nullptr, *ptr = nullptr, hints;
-            int iResult;
+    class Listener{
+    public:
+        SocketManager* manager;
+        
+        SOCKET listenerSocket = INVALID_SOCKET;
+        SOCKET clientSocket = INVALID_SOCKET;
+        
+        addrinfo *result = nullptr, *ptr = nullptr, hints;
+        int iResult;
 
-            char recvbuff[DEFAULT_BUFLEN];
-            int recvbuflen = DEFAULT_BUFLEN;
+        char recvbuff[DEFAULT_BUFLEN];
+        int recvbuflen = DEFAULT_BUFLEN;
 
-            std::atomic_bool closingConnection = false;
+        std::atomic_bool closingConnection = false;
 
-        public:
-            Listener();
-            
-            // tries to accept a connection
-            void createSocket();
+    public:
+        Listener();
+        
+        // tries to accept a connection
+        void createSocket();
 
-            // listens for incomming connections adding them to SocketManager list
-            void startListening();
+        // listens for incomming connections adding them to SocketManager list
+        void startListening();
 
-            // Closes listener socket 
-            void closeConnection();
-        };
-
-
-    }
+        // Closes listener socket 
+        void closeConnection();
+    };
 
     class SocketManager{
     public:
 
-        SocketManager(ServerLogic*);
+        SocketManager(ServerInterface& server);
         ~SocketManager();
         
         void start();
@@ -119,11 +115,11 @@ namespace PrimeProcessor{
         // To-Do determine if I need to overload the removeClient function
         // void removeClient(std::shared_ptr<ClientHandler>);
 
-        ServerLogic *manager;
+        ServerInterface& server;
         
-        std::array<unsigned long long, 2> getRange() { return manager->getRange(); }
+        std::array<unsigned long long, 2> requestWork() { return server.requestWork(); }
 
-        void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { manager->foundPrimes(p, r); }
+        void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { server.primesReceived(p, r); }
         
         // returns array client was searching to ServerLogic work queue
         void searchFailed(std::array<unsigned long long, 2>);
