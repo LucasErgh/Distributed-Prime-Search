@@ -1,6 +1,8 @@
 #ifndef ServerLogic_h
 #define ServerLogic_h
 
+#include "ServerInterface.h"
+
 #include <fstream>
 #include <stdexcept>
 
@@ -13,18 +15,13 @@
 #include <thread>
 
 namespace PrimeProcessor{
-
-    class SocketManager;
-
-    class ServerLogic{
+    class ServerLogic : public ServerInterface{
     private:
 
         const std::string rangeFile = "../Ranges_Searched.txt";
         const std::string primeFile = "../Primes_Found.txt";
         std::fstream rangesSearched;
         std::fstream primesFound;
-
-        std::unique_ptr<SocketManager> manager;
 
         // To-Do Try to consider using atomic variables rather than mutexs
 
@@ -44,7 +41,7 @@ namespace PrimeProcessor{
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
         void storeToFile();
-        
+
         // populate workQueue when it gets low
         void populateWorkQueue();
 
@@ -62,13 +59,13 @@ namespace PrimeProcessor{
         void stop();
 
         // called by the server manager to get the next range to search
-        std::array<unsigned long long, 2> getRange();
+        std::array<unsigned long long, 2> requestWork() override;
 
         // called when client error occurs, range gets moved from WIPQueue to WorkQueue
-        void returnRange(std::array<unsigned long long, 2>);
+        void workFailed(std::array<unsigned long long, 2>) override;
 
         // called by the server manager to return ranges found
-        void foundPrimes(std::vector<unsigned long long> primes, std::array<unsigned long long, 2>);
+        void primesReceived(std::vector<unsigned long long> primes, std::array<unsigned long long, 2>) override;
     };
 
 }
