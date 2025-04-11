@@ -19,7 +19,7 @@ namespace PrimeProcessor{
         if (iResult != 0) {
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
-    
+
         listener = std::make_unique<Listener>();
         listener->manager = this;
     }
@@ -69,8 +69,9 @@ namespace PrimeProcessor{
             std::unique_lock lock(clientCloseMutex);
 
             closeClientCondition.wait(lock);
-            
+
             while(clientsToClose != 0){
+
                 clientListMutex.lock();
                 auto i = std::find_if(clientList.begin(), clientList.end(), [](const auto& pair){ return pair.first->needsClosedByParent == true; });
                 if(i != clientList.end()){
@@ -79,6 +80,7 @@ namespace PrimeProcessor{
                     clientList.erase(i);
                 }
                 clientListMutex.unlock();
+
                 --clientsToClose;
             }
         }

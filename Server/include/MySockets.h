@@ -68,6 +68,7 @@ namespace PrimeProcessor{
     public:
         std::condition_variable closeClientCondition;
         std::atomic<int> clientsToClose = 0;
+
     };
 }
 

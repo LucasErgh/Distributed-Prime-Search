@@ -27,7 +27,6 @@ namespace PrimeProcessor{
         std::atomic_bool currentlyRunning = true;
 
     public:
-
         ClientHandler(SOCKET& s, SocketManager* m);
 
         // cloeses conenction with client

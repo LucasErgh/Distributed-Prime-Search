@@ -1,6 +1,5 @@
 #include "Serialization.h"
 
-
 // Create message for close connection
 std::vector<std::byte> createMsg(){
     const uint8_t msgType = CLOSE_CONNECTION;
@@ -48,7 +47,6 @@ int readMsg(uint8_t *header, uint16_t &payloadSize){
     return msgType;
 }
 
-
 // returns bool indicating success
 bool readMsg(std::vector<std::byte>& payload, const uint16_t& payloadSize, std::array<unsigned long long, 2> &range){
     int pos = 0;
@@ -60,7 +58,6 @@ bool readMsg(std::vector<std::byte>& payload, const uint16_t& payloadSize, std::
     // To-Do verify numbers given
     return true;
 }
-
 
 std::vector<std::byte> createMsg(const std::array<unsigned long long, 2>& r){
     std::vector<std::byte> msg(19);
@@ -84,7 +81,6 @@ std::vector<std::byte> createMsg(const std::array<unsigned long long, 2>& r){
 
     return msg;
 }
-
 
 // returns bool indicating success
 bool readMsg(std::vector<std::byte>& payload, const uint16_t& payloadSize, std::vector<unsigned long long> &primes){

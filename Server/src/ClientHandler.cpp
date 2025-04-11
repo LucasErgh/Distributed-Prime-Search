@@ -32,7 +32,7 @@ namespace PrimeProcessor{
         do{
             bytesReceived = 0;
             payloadSize = 0;
-            
+
             // get message header
             iResult = recv(clientSocket, reinterpret_cast<char*>(header), 3, 0);
             if (iResult <= 0){
