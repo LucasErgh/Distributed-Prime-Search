@@ -1,6 +1,7 @@
 #ifndef MySockets_h
 #define MySockets_h
 
+#include "ClientHandler.h"
 #include "ServerInterface.h"
 #include "Serialization.h"
 #include "config.h"
@@ -22,37 +23,8 @@
 
 namespace PrimeProcessor{
 
+    class ClientHandler;
     class SocketManager;
-
-    class ClientHandler{
-    public:
-        SocketManager* manager;
-
-        SOCKET clientSocket;
-
-        uint8_t header[3];
-        int iSendResult;
-        int iResult;
-        std::vector<std::byte> lastSent;
-        std::array<unsigned long long, 2> lastRange;
-        std::atomic_bool currentlyRunning = true;
-
-    public:
-
-        ClientHandler(SOCKET& s, SocketManager* m);
-
-        // cloeses conenction with client
-        void closeConnection();
-
-        // loop that communicates with clients
-        void clientComs();
-        void commsFailed();
-
-        static int nextKey;
-        int key;
-
-        std::atomic<bool> needsClosedByParent = false;
-    };
 
     class Listener{
     public:
@@ -94,7 +66,10 @@ namespace PrimeProcessor{
 
         // friends
         friend Listener;
-        friend ClientHandler;
+
+        std::array<unsigned long long, 2> requestWork() { return server.requestWork(); }
+        void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { server.primesReceived(p, r); }
+        void searchFailed(std::array<unsigned long long, 2>);
 
     private:
         std::atomic<bool> closingSocketManager = false;
@@ -116,20 +91,15 @@ namespace PrimeProcessor{
         // void removeClient(std::shared_ptr<ClientHandler>);
 
         ServerInterface& server;
-        
-        std::array<unsigned long long, 2> requestWork() { return server.requestWork(); }
-
-        void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { server.primesReceived(p, r); }
-        
-        // returns array client was searching to ServerLogic work queue
-        void searchFailed(std::array<unsigned long long, 2>);
 
         void threadClosingLoop();
-        std::atomic<int> clientsToClose = 0;
         std::thread clientClosingThread;
-        std::condition_variable closeClientCondition;
         std::mutex clientCloseMutex;
-    };   
+
+    public:
+        std::condition_variable closeClientCondition;
+        std::atomic<int> clientsToClose = 0;
+    };
 }
 
 #endif
