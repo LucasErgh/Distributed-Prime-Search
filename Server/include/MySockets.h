@@ -1,10 +1,10 @@
 #ifndef MySockets_h
 #define MySockets_h
 
+#include "Listener.h"
 #include "ClientHandler.h"
 #include "ServerInterface.h"
 #include "Serialization.h"
-#include "config.h"
 
 // Winsock Libraries
 #include <winsock2.h>
@@ -23,36 +23,8 @@
 
 namespace PrimeProcessor{
 
+    class Listener;
     class ClientHandler;
-    class SocketManager;
-
-    class Listener{
-    public:
-        SocketManager* manager;
-        
-        SOCKET listenerSocket = INVALID_SOCKET;
-        SOCKET clientSocket = INVALID_SOCKET;
-        
-        addrinfo *result = nullptr, *ptr = nullptr, hints;
-        int iResult;
-
-        char recvbuff[DEFAULT_BUFLEN];
-        int recvbuflen = DEFAULT_BUFLEN;
-
-        std::atomic_bool closingConnection = false;
-
-    public:
-        Listener();
-        
-        // tries to accept a connection
-        void createSocket();
-
-        // listens for incomming connections adding them to SocketManager list
-        void startListening();
-
-        // Closes listener socket 
-        void closeConnection();
-    };
 
     class SocketManager{
     public:
@@ -64,12 +36,12 @@ namespace PrimeProcessor{
 
         void stop();
 
-        // friends
-        friend Listener;
-
         std::array<unsigned long long, 2> requestWork() { return server.requestWork(); }
         void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { server.primesReceived(p, r); }
         void searchFailed(std::array<unsigned long long, 2>);
+
+        // Called by Listener to add ClientSocket to clientList
+        void addClient(SOCKET& c);
 
     private:
         std::atomic<bool> closingSocketManager = false;
@@ -77,13 +49,10 @@ namespace PrimeProcessor{
         std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
         std::mutex clientListMutex;
 
-        Listener listener;
+        std::unique_ptr<Listener> listener;
         std::thread listenThread;
 
         WSAData wsaData;
-
-        // Called by Listener to add ClientSocket to clientList
-        void addClient(SOCKET& c);
 
         // removes a client from list of workers by key
         void removeClient(int key);

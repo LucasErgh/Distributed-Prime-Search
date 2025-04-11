@@ -9,6 +9,7 @@ set(Sources
     "ServerLogic.cpp"
     "FileIO.cpp"
     "ClientHandler.cpp"
+    "Listener.cpp"
 )
 
 add_library(srcServer ${Sources})
