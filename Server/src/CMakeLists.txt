@@ -8,7 +8,6 @@ set(Sources
     "MySockets.cpp"
     "ServerLogic.cpp"
     "FileIO.cpp"
-    "ServerInterface.cpp"
 )
 
 add_library(srcServer ${Sources})
