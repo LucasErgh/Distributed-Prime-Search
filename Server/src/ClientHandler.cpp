@@ -106,5 +106,4 @@ namespace PrimeProcessor{
     }
 
     ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
-  
 }
