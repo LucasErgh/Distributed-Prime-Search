@@ -38,6 +38,7 @@ namespace PrimeProcessor{
         std::array<unsigned long long, 2> requestWork() { return server.requestWork(); }
         void foundPrimes(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r) { server.primesReceived(p, r); }
         void searchFailed(std::array<unsigned long long, 2>);
+        void clientDisconnected();
 
         // Called by Listener to add ClientSocket to clientList
         void addClient(SOCKET& c);

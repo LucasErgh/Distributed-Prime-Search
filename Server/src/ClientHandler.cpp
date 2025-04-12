@@ -11,8 +11,7 @@ namespace PrimeProcessor{
         // we can just send the message since we are in in blocking mode be default
         iResult = send(clientSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
         needsClosedByParent = true;
-        manager->clientsToClose++;
-        manager->closeClientCondition.notify_all();
+        clientDisconnectedCallback();
         closesocket(clientSocket);
     }
 
@@ -37,8 +36,10 @@ namespace PrimeProcessor{
             iResult = recv(clientSocket, reinterpret_cast<char*>(header), 3, 0);
             if (iResult <= 0){
                 // To-Do
-                if (!currentlyRunning) closeConnection();
-                else {commsFailed();}
+                if (!currentlyRunning)
+                    closeConnection();
+                else
+                    commsFailed();
                 return;
             }
             bytesReceived += iResult;
@@ -62,8 +63,10 @@ namespace PrimeProcessor{
                 iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()), payloadSize*sizeof(unsigned long long), 0);
                 if (iResult < 0) {
                     // To-Do
-                    if (!currentlyRunning) closeConnection();
-                    else commsFailed();
+                    if (!currentlyRunning)
+                        closeConnection();
+                    else
+                        commsFailed();
                 }
                 bytesReceived += iResult;
             }
@@ -95,8 +98,10 @@ namespace PrimeProcessor{
             iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
             if (iSendResult == SOCKET_ERROR){
                 // To-Do
-                if(!currentlyRunning) closeConnection();
-                else commsFailed();
+                if(!currentlyRunning)
+                    closeConnection();
+                else
+                    commsFailed();
                 return;
             }
             unsigned long long min, max;
@@ -110,16 +115,16 @@ namespace PrimeProcessor{
 
     ClientHandler::ClientHandler(
             SOCKET& s,
-            SocketManager* m,
             std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
             std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback,
-            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback
+            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback,
+            std::function<void()> clientDisconnectedCallback
         )
         : clientSocket(s),
         key(nextKey++),
-        manager(m),
         requestWorkCallback(requestWorkCallback),
         foundPrimesCallback(foundPrimesCallback),
-        searchFailedCallback(searchFailedCallback)
+        searchFailedCallback(searchFailedCallback),
+        clientDisconnectedCallback(clientDisconnectedCallback)
         {}
 }
