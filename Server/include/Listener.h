@@ -1,8 +1,8 @@
 #ifndef LISTENER_H
 #define LISTENER_H
 
-#include "MySockets.h"
 #include "config.h"
+#include <functional>
 #include <atomic>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -10,15 +10,13 @@
 
 namespace PrimeProcessor{
 
-    class SocketManager;
-
     class Listener{
-    public:
-        SocketManager* manager;
-        
+    private:
+        std::function<void(SOCKET&)> addClientCallback;
+
         SOCKET listenerSocket = INVALID_SOCKET;
         SOCKET clientSocket = INVALID_SOCKET;
-        
+
         addrinfo *result = nullptr, *ptr = nullptr, hints;
         int iResult;
 
@@ -28,8 +26,8 @@ namespace PrimeProcessor{
         std::atomic_bool closingConnection = false;
 
     public:
-        Listener();
-        
+        Listener(std::function<void(SOCKET&)>);
+
         // tries to accept a connection
         void createSocket();
 
@@ -39,6 +37,7 @@ namespace PrimeProcessor{
         // Closes listener socket 
         void closeConnection();
     };
+
 }
 
 #endif

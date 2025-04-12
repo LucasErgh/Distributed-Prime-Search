@@ -23,7 +23,6 @@
 
 namespace PrimeProcessor{
 
-    class Listener;
     class ClientHandler;
 
     class SocketManager{

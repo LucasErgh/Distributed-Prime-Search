@@ -3,7 +3,7 @@
 
 namespace PrimeProcessor{
 
-    Listener::Listener() {}
+    Listener::Listener(std::function<void(SOCKET&)> addClientCallback) : addClientCallback(addClientCallback) {}
 
     void Listener::createSocket(){
         // Initialize SOCKET object
@@ -59,7 +59,7 @@ namespace PrimeProcessor{
             }
             
             // handle successful connection
-            try { manager->addClient(clientSocket); }
+            try { addClientCallback(clientSocket); }
             catch (const std::runtime_error& e) { throw e; }
             clientSocket = INVALID_SOCKET;
         }

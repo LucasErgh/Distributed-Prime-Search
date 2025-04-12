@@ -20,8 +20,7 @@ namespace PrimeProcessor{
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
 
-        listener = std::make_unique<Listener>();
-        listener->manager = this;
+        listener = std::make_unique<Listener>(std::bind(&addClient, this, std::placeholders::_1));
     }
 
     SocketManager::~SocketManager(){
