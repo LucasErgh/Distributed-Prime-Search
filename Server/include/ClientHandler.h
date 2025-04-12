@@ -17,6 +17,7 @@ namespace PrimeProcessor{
     private:
         std::function<std::array<unsigned long long, 2>()> requestWorkCallback;
         std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback;
+        std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback;
 
         SocketManager* manager;
 
@@ -34,7 +35,8 @@ namespace PrimeProcessor{
             SOCKET& s,
             SocketManager* m,
             std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
-            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback
+            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback,
+            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback
         );
 
         // cloeses conenction with client

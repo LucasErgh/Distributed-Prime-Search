@@ -18,7 +18,7 @@ namespace PrimeProcessor{
 
     void ClientHandler::commsFailed(){
         std::cout << "Client connection unexpectedly closed: " << key << ".\n";
-        manager->searchFailed(lastRange);
+        searchFailedCallback(lastRange);
         closeConnection();
     }
 
@@ -112,7 +112,14 @@ namespace PrimeProcessor{
             SOCKET& s,
             SocketManager* m,
             std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
-            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback
+            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback,
+            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback
         )
-        : clientSocket(s), key(nextKey++), manager(m), requestWorkCallback(requestWorkCallback), foundPrimesCallback(foundPrimesCallback) {}
+        : clientSocket(s),
+        key(nextKey++),
+        manager(m),
+        requestWorkCallback(requestWorkCallback),
+        foundPrimesCallback(foundPrimesCallback),
+        searchFailedCallback(searchFailedCallback)
+        {}
 }
