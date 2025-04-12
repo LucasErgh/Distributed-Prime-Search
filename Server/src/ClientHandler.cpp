@@ -87,10 +87,10 @@ namespace PrimeProcessor{
                 std::cout << i << std::endl; 
             std::cout << "End of prime list" << std::endl;
 
-            manager->foundPrimes(primes, lastRange); 
+            foundPrimesCallback(primes, lastRange); 
 
             // send client new range of primes
-            lastRange = manager->requestWork();
+            lastRange = requestWorkCallback();
             lastSent = createMsg(lastRange);
             iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
             if (iSendResult == SOCKET_ERROR){
@@ -108,6 +108,11 @@ namespace PrimeProcessor{
         closeConnection();
     }
 
-    ClientHandler::ClientHandler(SOCKET& s, SocketManager* m, std::function<std::array<unsigned long long, 2>()> requestWorkCallback)
-        : clientSocket(s), key(nextKey++), manager(m), requestWorkCallback(requestWorkCallback) { }
+    ClientHandler::ClientHandler(
+            SOCKET& s,
+            SocketManager* m,
+            std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
+            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback
+        )
+        : clientSocket(s), key(nextKey++), manager(m), requestWorkCallback(requestWorkCallback), foundPrimesCallback(foundPrimesCallback) {}
 }
