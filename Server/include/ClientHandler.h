@@ -15,6 +15,8 @@ namespace PrimeProcessor{
 
     class ClientHandler{
     private:
+        std::function<std::array<unsigned long long, 2>()> requestWorkCallback;
+
         SocketManager* manager;
 
         SOCKET clientSocket;
@@ -27,7 +29,7 @@ namespace PrimeProcessor{
         std::atomic_bool currentlyRunning = true;
 
     public:
-        ClientHandler(SOCKET& s, SocketManager* m);
+        ClientHandler(SOCKET& s, SocketManager* m, std::function<std::array<unsigned long long, 2>()> requestWorkCallback);
 
         // cloeses conenction with client
         void closeConnection();

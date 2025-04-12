@@ -30,7 +30,7 @@ namespace PrimeProcessor{
 
     void SocketManager::addClient(SOCKET& c){
         clientListMutex.lock();
-        std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(c, this);
+        std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(c, this, std::bind(requestWork, this));
         std::thread cThread(ClientHandler::clientComs, client);
         clientList.emplace_back(std::move(client), std::move(cThread));
         clientListMutex.unlock();

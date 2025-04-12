@@ -108,5 +108,6 @@ namespace PrimeProcessor{
         closeConnection();
     }
 
-    ClientHandler::ClientHandler(SOCKET& s, SocketManager* m) : clientSocket(s), key(nextKey++), manager(m) { }
+    ClientHandler::ClientHandler(SOCKET& s, SocketManager* m, std::function<std::array<unsigned long long, 2>()> requestWorkCallback)
+        : clientSocket(s), key(nextKey++), manager(m), requestWorkCallback(requestWorkCallback) { }
 }
