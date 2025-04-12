@@ -14,7 +14,7 @@ namespace PrimeProcessor{
     class SocketManager;
 
     class ClientHandler{
-    public:
+    private:
         SocketManager* manager;
 
         SOCKET clientSocket;

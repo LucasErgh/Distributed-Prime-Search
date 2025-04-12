@@ -73,8 +73,11 @@ namespace PrimeProcessor{
             std::fill(primes.begin(), primes.end(), 0);
             if (!readMsg(payload, payloadSize, primes)){
                 // To-Do
-                if (!currentlyRunning) closeConnection();
-                else commsFailed();
+                if (!currentlyRunning)
+                    closeConnection();
+                else
+                    commsFailed();
+
                 return;
             }
 
@@ -89,7 +92,7 @@ namespace PrimeProcessor{
             // send client new range of primes
             lastRange = manager->requestWork();
             lastSent = createMsg(lastRange);
-            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);        
+            iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
             if (iSendResult == SOCKET_ERROR){
                 // To-Do
                 if(!currentlyRunning) closeConnection();
@@ -100,7 +103,7 @@ namespace PrimeProcessor{
             memcpy(&min, lastSent.data() + 3, sizeof(unsigned long long));
             memcpy(&max, lastSent.data() + 11, sizeof(unsigned long long));
             std::cout << "Sent client search range: (" << min << ", " << max << ")" << std::endl;
-            
+
         } while (currentlyRunning);
         closeConnection();
     }
