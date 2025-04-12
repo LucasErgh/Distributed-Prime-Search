@@ -1,17 +1,15 @@
 #ifndef CLIENTHANDLER_H
 #define CLIENTHANDLER_H
 
-#include "MySockets.h"
 #include <vector>
 #include <array>
 #include <atomic>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <functional>
 
 namespace PrimeProcessor{
-
-    class SocketManager;
 
     class ClientHandler{
     private:
@@ -50,6 +48,7 @@ namespace PrimeProcessor{
 
         std::atomic<bool> needsClosedByParent = false;
     };
+
 }
 
 #endif

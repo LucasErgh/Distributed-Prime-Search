@@ -23,8 +23,6 @@
 
 namespace PrimeProcessor{
 
-    class ClientHandler;
-
     class SocketManager{
     public:
 
@@ -70,6 +68,7 @@ namespace PrimeProcessor{
         std::atomic<int> clientsToClose = 0;
 
     };
+
 }
 
 #endif

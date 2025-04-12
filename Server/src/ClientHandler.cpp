@@ -1,4 +1,5 @@
 #include "ClientHandler.h"
+#include "Serialization.h"
 #include <iostream>
 
 namespace PrimeProcessor{
@@ -20,7 +21,6 @@ namespace PrimeProcessor{
         searchFailedCallback(lastRange);
         closeConnection();
     }
-
 
     void ClientHandler::clientComs(){
         int msgType;
