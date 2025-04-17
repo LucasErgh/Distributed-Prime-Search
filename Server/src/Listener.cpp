@@ -16,16 +16,20 @@ namespace PrimeProcessor{
         // Resolve address
         iResult = getaddrinfo(nullptr, DEFAULT_PORT, &hints, &result);
         if (iResult != 0){
-            if (closingConnection) return;
-            else throw std::runtime_error("Get address info failed with error: " + WSAGetLastError());
+            if (closingConnection)
+                return;
+            else
+                throw std::runtime_error("Get address info failed with error: " + WSAGetLastError());
         }
 
         // Create listenerSocket
         listenerSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
         if (listenerSocket == INVALID_SOCKET) {
             freeaddrinfo(result);
-            if (closingConnection) return;
-            else throw std::runtime_error("Failed to create listener socket with error: " + WSAGetLastError());
+            if (closingConnection)
+                return;
+            else
+                throw std::runtime_error("Failed to create listener socket with error: " + WSAGetLastError());
         }
     }
 
@@ -35,15 +39,19 @@ namespace PrimeProcessor{
         if (iResult == SOCKET_ERROR) {
             freeaddrinfo(result);
             closesocket(listenerSocket);
-            if (closingConnection) return;
-            else throw std::runtime_error("Bind failed with error: " + WSAGetLastError());
+            if (closingConnection)
+                return;
+            else
+                throw std::runtime_error("Bind failed with error: " + WSAGetLastError());
         }
 
         // Start listening
         if (listen(listenerSocket, SOMAXCONN) == SOCKET_ERROR){
             closesocket(listenerSocket);
-            if (closingConnection) return;
-            else throw std::runtime_error("listen() failed with error: " + WSAGetLastError());
+            if (closingConnection)
+                return;
+            else
+                throw std::runtime_error("listen() failed with error: " + WSAGetLastError());
         }
 
         std::cout << "Started listening\n";
@@ -53,14 +61,19 @@ namespace PrimeProcessor{
             
             // handle failed connection
             if (clientSocket == INVALID_SOCKET) {
-                if (closingConnection) break;
+                if (closingConnection) 
+                    break;
                 closesocket(listenerSocket);
                 throw std::runtime_error("Accept connection failed with error: " + WSAGetLastError());
             }
             
             // handle successful connection
-            try { addClientCallback(clientSocket); }
-            catch (const std::runtime_error& e) { throw e; }
+            try { 
+                addClientCallback(clientSocket);
+            }
+            catch (const std::runtime_error& e) {
+                throw e;
+            }
             clientSocket = INVALID_SOCKET;
         }
     }

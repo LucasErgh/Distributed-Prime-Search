@@ -1,5 +1,6 @@
 #include "ServerLogic.h"
 #include "MySockets.h"
+#include "NetworkManager.h"
 
 #include <iostream>
 #include <string>
@@ -10,12 +11,16 @@ int main() {
     ServerLogic server;
     server.start();
 
-    SocketManager socketManager(server);
-    socketManager.start();
+    NetworkManager networkManager(server);
 
-    std::cin.get();
+    try {
+        networkManager.start();
+        // Keep the server running or add logic to handle shutdown
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
-    socketManager.stop();
+    networkManager.stop();
     server.stop();
 
     return 0;

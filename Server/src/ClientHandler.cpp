@@ -60,7 +60,12 @@ namespace PrimeProcessor{
             std::vector<std::byte> payload(payloadSize * sizeof(unsigned long long));
             bytesReceived = 0;
             if(payloadSize != 0) {
-                iResult = recv(clientSocket, reinterpret_cast<char*>(payload.data()), payloadSize*sizeof(unsigned long long), 0);
+                iResult = recv(
+                    clientSocket,
+                    reinterpret_cast<char*>(payload.data()),
+                    payloadSize*sizeof(unsigned long long), 0
+                );
+
                 if (iResult < 0) {
                     // To-Do
                     if (!currentlyRunning)
@@ -68,6 +73,7 @@ namespace PrimeProcessor{
                     else
                         commsFailed();
                 }
+
                 bytesReceived += iResult;
             }
 

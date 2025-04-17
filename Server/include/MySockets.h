@@ -44,7 +44,7 @@ namespace PrimeProcessor{
     private:
         std::atomic<bool> closingSocketManager = false;
 
-        std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList; // all client actively connected
+        std::vector<std::pair<std::shared_ptr<ClientHandler>, std::thread>> clientList;
         std::mutex clientListMutex;
 
         std::unique_ptr<Listener> listener;
@@ -54,6 +54,7 @@ namespace PrimeProcessor{
 
         // removes a client from list of workers by key
         void removeClient(int key);
+
         // To-Do determine if I need to overload the removeClient function
         // void removeClient(std::shared_ptr<ClientHandler>);
 
