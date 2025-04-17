@@ -5,13 +5,13 @@ set(Dirs
 
 set(Sources 
     "DPPServer.cpp"
-    "MySockets.cpp"
     "ServerLogic.cpp"
     "FileIO.cpp"
-    "ClientHandler.cpp"
-    "Listener.cpp"
     "BoostNetworkManager.cpp"
 )
 
 add_library(srcServer ${Sources})
-target_include_directories(srcServer PUBLIC ${Dirs})
+target_include_directories(srcServer PUBLIC 
+    ${asio_SOURCE_DIR}/asio/include
+    ${Dirs} 
+)

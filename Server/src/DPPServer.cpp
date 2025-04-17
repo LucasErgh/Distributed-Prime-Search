@@ -1,5 +1,5 @@
 #include "ServerLogic.h"
-#include "MySockets.h"
+#include "BoostNetworkManager.h"
 
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@ int main() {
     ServerLogic server;
     server.start();
 
-    SocketManager socketManager(server);
+    BoostManager socketManager(server);
     socketManager.start();
 
     std::cin.get();

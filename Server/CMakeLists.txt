@@ -18,7 +18,7 @@ set_target_properties(Server PROPERTIES OUTPUT_NAME "DPPServer")
 add_subdirectory(include)
 add_subdirectory(src)
 
-target_include_directories(Server PRIVATE ${asio_SOURCE_DIR}/asio/include)
+target_include_directories(Server PUBLIC ${asio_SOURCE_DIR}/asio/include)
 
 target_link_libraries(Server PRIVATE includeServer)
 target_link_libraries(Server PRIVATE srcServer)
