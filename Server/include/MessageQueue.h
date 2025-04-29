@@ -13,6 +13,7 @@
 #include <mutex>
 
 namespace PrimeProcessor {
+
     class MessageQueue{
     private:
 
@@ -25,6 +26,8 @@ namespace PrimeProcessor {
         // Vector of ranges which are currently being searched
         std::vector<std::array<unsigned long long, 2>> inProgressQueue;
 
+        std::deque<unsigned long long> primesFound;
+
     public:
 
         // Dequeues a message returning a encoded byte array 
@@ -34,7 +37,10 @@ namespace PrimeProcessor {
         void enqueueWork(std::array<unsigned long long, 2> range);
 
         // Called by the SocketManager when a client is unable to finish a piece of work
-        void enqueueFailedMessage(std::vector<std::byte> message);
+        void messageFailed(std::vector<std::byte> message);
+
+        // Add primes found to a queue to be retreived and stored
+        void enqueuePrimesFound(std::vector<unsigned long long>);
 
         // Returnes a vector of all ranges in progess and in the work queue
         std::deque<std::array<unsigned long long, 2>> emergencyDequeue();
