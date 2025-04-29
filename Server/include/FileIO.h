@@ -15,5 +15,4 @@ void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long>
 
 void writeRangesSearched(std::fstream& rangesSearched, std::deque<std::array<unsigned long long, 2>>& primesSearched);
 
-
 #endif
