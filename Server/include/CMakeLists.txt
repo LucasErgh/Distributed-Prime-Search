@@ -5,6 +5,7 @@ set(Includes
     "ServerInterface.h"
     "ClientHandler.h"
     "Listener.h"
+    "MessageQueue.h"
 )
 
 add_library(includeServer INTERFACE ${Includes})

@@ -10,6 +10,7 @@ set(Sources
     "FileIO.cpp"
     "ClientHandler.cpp"
     "Listener.cpp"
+    "MessageQueue.cpp"
 )
 
 add_library(srcServer ${Sources})
