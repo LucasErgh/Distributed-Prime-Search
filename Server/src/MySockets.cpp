@@ -6,7 +6,7 @@
 
 namespace PrimeProcessor{
 
-    SocketManager::SocketManager(std::shared_ptr<MessageQueue>& messageQueue) : messageQueue(messageQueue) {
+    SocketManager::SocketManager(MessageQueue* messageQueue) : messageQueue(messageQueue) {
         // Initialize WinSock
         WSAData wsaData;
         int iResult;

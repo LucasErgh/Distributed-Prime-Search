@@ -15,7 +15,7 @@ namespace PrimeProcessor{
 
     class ClientHandler{
     private:
-        std::shared_ptr<MessageQueue> messageQueue;
+        MessageQueue* messageQueue;
         std::function<void()> clientDisconnectedCallback;
 
         SOCKET clientSocket;
@@ -28,7 +28,7 @@ namespace PrimeProcessor{
         std::atomic_bool currentlyRunning = true;
 
     public:
-        ClientHandler(SOCKET& s, std::shared_ptr<MessageQueue> messageQueue, std::function<void()> clientDisconnectedCallback);
+        ClientHandler(SOCKET& s, MessageQueue* messageQueue, std::function<void()> clientDisconnectedCallback);
 
         // cloeses conenction with client
         void closeConnection();

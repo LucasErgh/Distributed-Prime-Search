@@ -12,7 +12,7 @@
 namespace PrimeProcessor{
     class ServerLogic {
     private:
-        const std::shared_ptr<MessageQueue> messageQueue;
+        MessageQueue* messageQueue;
 
         std::atomic_bool stopFlag = false;
 
@@ -39,7 +39,7 @@ namespace PrimeProcessor{
         void combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r);
 
     public:
-        ServerLogic(std::shared_ptr<MessageQueue>& messageQueue);
+        ServerLogic(MessageQueue* messageQueue);
         ~ServerLogic();
 
         void start();

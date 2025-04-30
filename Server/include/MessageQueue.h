@@ -32,6 +32,8 @@ namespace PrimeProcessor {
         // Vector of prime numbers found
         std::vector<unsigned long long> primesFound;
 
+        // TODO add a vector of primes that have been searched
+
     public:
 
         // Dequeues a message returning a encoded byte array 

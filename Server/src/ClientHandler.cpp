@@ -113,7 +113,7 @@ namespace PrimeProcessor{
         closeConnection();
     }
 
-    ClientHandler::ClientHandler(SOCKET& s, std::shared_ptr<MessageQueue> messageQueue, std::function<void()> clientDisconnectedCallback) : 
+    ClientHandler::ClientHandler(SOCKET& s, MessageQueue* messageQueue, std::function<void()> clientDisconnectedCallback) : 
         clientSocket(s),
         key(nextKey++),
         messageQueue(messageQueue),

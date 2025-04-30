@@ -9,8 +9,8 @@
 int main() {
     using namespace PrimeProcessor;
 
-    std::shared_ptr<MessageQueue> messageQueue = std::make_shared<MessageQueue>();
-    if (!messageQueue.get())
+    MessageQueue* messageQueue = new MessageQueue();
+    if (!messageQueue)
         std::cerr << "We found the problem\n";
 
     std::cerr << "\nTest in main() after messageQueue declaration\n";
@@ -30,6 +30,8 @@ int main() {
 
     server.stop();
     serverThread.join();
+
+    delete messageQueue;
 
     return 0;
 }

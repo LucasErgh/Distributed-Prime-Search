@@ -15,7 +15,12 @@ namespace PrimeProcessor {
         std::lock_guard<std::mutex> lock(queueMutex);
 
         std::array<unsigned long long, 2> back = workQueue.back();
+
+        std::cerr << "Back: " << back[0] << ", " << back[1] << std::endl;
+        std::cerr << "Size before: " << rangesInProgress.size() << std::endl;
         rangesInProgress.push_back(back);
+        std::cerr << "Size after: " << rangesInProgress.size() << std::endl;
+
         workQueue.pop_back();
 
         if (workQueue.size() >= 1)
@@ -43,7 +48,7 @@ namespace PrimeProcessor {
 
         std::lock_guard<std::mutex> lock(queueMutex);
 
-        for (auto& cur : ranges) {
+        for (auto cur : ranges) {
             workQueue.push_front(cur);
         }
 
@@ -71,7 +76,11 @@ namespace PrimeProcessor {
     // Add primes found to a queue to be retreived and stored
     void MessageQueue::enqueuePrimesFound(std::vector<unsigned long long>& primes, std::array<unsigned long long, 2> lastRange){
         std::lock_guard<std::mutex> lock(queueMutex);
-        rangesInProgress.erase(std::find(rangesInProgress.begin(), rangesInProgress.end(), lastRange));
+        auto i = std::find_if(rangesInProgress.begin(), rangesInProgress.end(), [&lastRange](auto &pair){ return pair[0] == lastRange[0] && pair[1] == lastRange[1]; });
+        if (i != rangesInProgress.end()){
+            // TODO Add vector of prime numbers searched and add the range searched here
+            rangesInProgress.erase(i);
+        }
         primesFound.insert(primesFound.end(), primes.begin(), primes.end());
     }
 
