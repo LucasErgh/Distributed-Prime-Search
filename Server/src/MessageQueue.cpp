@@ -16,7 +16,22 @@ namespace PrimeProcessor {
         std::array<unsigned long long, 2> back = workQueue.back();
         rangesInProgress.push_back(back);
         workQueue.pop_back();
+
+        if (workQueue.size() >= 1)
+            workToReceive = true;
+        else 
+            workToReceive = false;
+
+        if (workQueue.size() <= 50)
+            needQueueRefilled = true;
+        else
+            needQueueRefilled = false;
+
         return back;
+    }
+
+    bool MessageQueue::workToDequeue(){
+        return workToReceive;
     }
 
     // Add new items to the workQueue
@@ -26,6 +41,18 @@ namespace PrimeProcessor {
         for (auto& cur : ranges) {
             workQueue.push_front(std::move(cur));
         }
+
+        if (workQueue.size() >= 50) {
+            needQueueRefilled = false;
+            workToReceive = true;
+        }
+        else
+            needQueueRefilled = true;
+    }
+
+    // returnes flag indicating if the work queue needs more items
+    bool MessageQueue::needsWorkEnqueued(){
+        return needQueueRefilled;
     }
 
     // Called by the SocketManager when a client is unable to finish a piece of work
@@ -49,6 +76,10 @@ namespace PrimeProcessor {
 
         std::vector<unsigned long long> primesToReturn = std::move(primesFound);
         return primesToReturn;
+    }
+
+    bool MessageQueue::primesToRetreive(){
+        return primesToReceive;
     }
 
     // Returnes a vector of all ranges in progess and in the work queue

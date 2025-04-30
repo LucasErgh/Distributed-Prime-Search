@@ -8,24 +8,11 @@
 #include <iostream>
 
 namespace PrimeProcessor {
- 
-    void ServerLogic::workFailed(std::array<unsigned long long, 2> arr){
-        WIPQueueMutex.lock();
-        workQueueMutex.lock();
 
-        auto r = std::find(WIPQueue.begin(), WIPQueue.end(), arr);
-        if(r != WIPQueue.end()){
-            workQueue.push_back(std::array<unsigned long long, 2>(*r));
-            WIPQueue.erase(r);
-            WIPQueue.shrink_to_fit();
-        }
-        // To-Do if it doesn't exist in the WIPQueue or the workQueue, remove it from primesSearched if it is within one of those ranges
-
-        WIPQueueMutex.unlock();
-        workQueueMutex.unlock();
-    }
-
-    ServerLogic::ServerLogic(): rangesSearched(std::fstream(rangeFile)), primesFound(std::fstream(primeFile, std::ios::app)){
+    ServerLogic::ServerLogic(std::shared_ptr<MessageQueue> messageQueue) :
+        rangesSearched(std::fstream(rangeFile)),
+        primesFound(std::fstream(primeFile, std::ios::app)),
+        messageQueue(messageQueue){
 
     }
 
@@ -36,51 +23,56 @@ namespace PrimeProcessor {
         readIn(rangesSearched, primesFound, primesSearched);
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
-        searchedNormalization();
+        std::vector<std::array<unsigned long long, 2>> workQueue;
+        searchedNormalization(primesSearched, workQueue);
+
         largestSearched = primesSearched.back()[1];
-        populateWorkQueue();
+
+        messageQueue->enqueueWork(workQueue);
+
+        while(!stopFlag) {
+            tryPopulateWorkQueue();
+            tryReceivingPrimes();
+        }
+
+        // Now shutdown server
+        storeToFile(messageQueue->emergencyDequeue(), messageQueue->retreivePrimesFound());
+        primesFound.close();
+
         return true;
     }
 
     void ServerLogic::stop(){
-        storeToFile();
-        primesFound.close();
-        if(!primesMutex.try_lock() || !primesSearchedMutex.try_lock()){
-            throw "no no no";
-        }
+        stopFlag = true;
     }
 
-    void ServerLogic::storeToFile(){
+    void ServerLogic::storeToFile(std::vector<std::array<unsigned long long, 2>> primesSearched, std::vector<unsigned long long> primes){
 
         combineRangesBeforeWrite(primesSearched);
-        primesSearchedMutex.lock();
         writeRangesSearched(rangesSearched, primesSearched);
-        primesSearchedMutex.unlock();
 
-        primesMutex.lock();
         writePrimesFound(primesFound, primes);
-        primesMutex.unlock();
     }
 
-    void ServerLogic::populateWorkQueue(){
-        workQueueMutex.lock();
-        int newSize = (workQueue.size() < 5) ? 10 : workQueue.size() * 2;
-        
-        //// number of digits per search set
-        // unsigned long long max = *primes.end();
-        // int searchSize = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
-        int searchSize = 100;
+    void ServerLogic::tryPopulateWorkQueue(){
+        std::vector<std::array<unsigned long long, 2>> workQueue;
+        if (messageQueue->needsWorkEnqueued()){
 
-        for (int i = workQueue.size(); i < newSize; i++){
-            workQueue.push_front( {largestSearched + 1, largestSearched + searchSize} );
-            largestSearched = largestSearched + searchSize;
+            //// number of digits per search set
+            // unsigned long long max = *primes.end();
+            // int searchSize = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
+            int searchSize = 100;
+
+            for (int i = workQueue.size(); i < 100; i++){
+                workQueue.push_back( {largestSearched + 1, largestSearched + searchSize} );
+                largestSearched = largestSearched + searchSize;
+            }
         }
-        workQueueMutex.unlock();
     }
 
     // finds gaps in rangesSearched at the start of the program
-    void ServerLogic::combineRangesBeforeWrite(std::deque<std::array<unsigned long long, 2>> &r){
-        std::deque<std::array<unsigned long long, 2>> mergedRanges;        
+    void ServerLogic::combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r){
+        std::vector<std::array<unsigned long long, 2>> mergedRanges;        
 
         std::sort(r.begin(), r.end(), [](auto &left, auto &right){return left[1] < right[1];});
 
@@ -96,14 +88,10 @@ namespace PrimeProcessor {
     }
 
     // finds gaps in rangesSearched at the start of the program
-    void ServerLogic::searchedNormalization(){
-        primesSearchedMutex.lock();
-        workQueueMutex.lock();
-
+    void ServerLogic::searchedNormalization(std::vector<std::array<unsigned long long, 2>>& primesSearched, std::vector<std::array<unsigned long long, 2>>& workQueue){
         std::sort(primesSearched.begin(), primesSearched.end(), [](auto &left, auto &right){return left[0] < right[0];});
         
         for(auto i = primesSearched.begin(); i != primesSearched.end() && (i + 1) != primesSearched.end();  i++){
-
             if (((i+1)->at(0) - i->at(1)) <= 1){
                 std::array<unsigned long long, 2> pairUnion = {i->at(0), (i+1)->at(1)};
                 i = primesSearched.erase(i, (i+2));
@@ -112,46 +100,15 @@ namespace PrimeProcessor {
             }
             else {
                 std::array<unsigned long long, 2> missing = {(i->at(1)) + 1, (i + 1)->at(0) - 1};
-                workQueue.push_front(missing);
+                workQueue.push_back(missing);
             }
         }
-
-        primesSearchedMutex.unlock();
-        workQueueMutex.unlock();
     }
 
-    void ServerLogic::primesReceived(std::vector<unsigned long long> p, std::array<unsigned long long, 2> r){
-        // To-Do remove range from WIPQueue
-        WIPQueueMutex.lock();
-        auto i = std::find_if(WIPQueue.begin(), WIPQueue.end(), [&r](auto &pair){ return pair[0] == r[0] && pair[1] == r[1]; });
-        if(i != WIPQueue.end()){
-            primesSearchedMutex.lock();
-            primesSearched.push_front({(*i)[0], (*i)[1]});
-            WIPQueue.erase(i);
+    void ServerLogic::tryReceivingPrimes(){
+        if (messageQueue->primesToRetreive()){
+            writePrimesFound(primesFound, messageQueue->retreivePrimesFound());
         }
-        primesSearchedMutex.unlock();
-        WIPQueueMutex.unlock();
-        
-        primesMutex.lock();
-        primes.insert(primes.end(), p.begin(), p.end());
-        primesMutex.unlock();
-    }
-
-    std::array<unsigned long long, 2> ServerLogic::requestWork(){
-        workQueueMutex.lock();
-        WIPQueueMutex.lock();
-
-        std::array<unsigned long long, 2> r(workQueue.back());
-        workQueue.pop_back();
-        workQueue.shrink_to_fit();
-        WIPQueue.push_front(r);
-
-        workQueueMutex.unlock();
-        WIPQueueMutex.unlock();
-
-        if(workQueue.size() < 10) populateWorkQueue();
-
-        return std::array<unsigned long long, 2>{r[0], r[1]};
     }
 
 }

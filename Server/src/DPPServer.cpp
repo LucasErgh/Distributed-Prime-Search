@@ -3,20 +3,21 @@
 
 #include <iostream>
 #include <string>
+#include <thread>
+#include <memory>
 
 int main() {
     using namespace PrimeProcessor;
 
-    ServerLogic server;
-    server.start();
+    std::shared_ptr<MessageQueue> messageQueue;
 
-    SocketManager socketManager(server);
-    socketManager.start();
+    ServerLogic server;
+    std::thread serverThread(server.start(messageQueue));
 
     std::cin.get();
 
-    socketManager.stop();
     server.stop();
+    serverThread.join();
 
     return 0;
 }
