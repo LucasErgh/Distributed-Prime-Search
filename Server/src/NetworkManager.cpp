@@ -8,7 +8,7 @@ namespace PrimeProcessor {
 
     };
 
-    NetworkManager::NetworkManager(const ServerInterface& server) : server(server) {
+    NetworkManager::NetworkManager(MessageQueue* messageQueue) : messageQueue(messageQueue) {
 
     }
 

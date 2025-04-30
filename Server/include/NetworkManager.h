@@ -1,7 +1,7 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
-#include "ServerInterface.h"
+#include "MessageQueue.h"
 #include "Serialization.h"
 #include "config.h"
 #include <vector>
@@ -56,14 +56,14 @@ namespace PrimeProcessor {
 
     class NetworkManager{
     public:
-        NetworkManager(const ServerInterface& server);
+        NetworkManager(MessageQueue* messageQueue);
         ~NetworkManager();
 
         void start();
         void stop();
 
     private:
-        const ServerInterface& server;
+        MessageQueue* messageQueue;
         WSAData wsaData;
         HANDLE iocp;
 
