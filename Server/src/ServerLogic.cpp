@@ -24,11 +24,14 @@ namespace PrimeProcessor {
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         std::vector<std::array<unsigned long long, 2>> workQueue;
+        workQueue.clear();
+
         searchedNormalization(primesSearched, workQueue);
 
         largestSearched = primesSearched.back()[1];
 
-        messageQueue->enqueueWork(workQueue);
+        if (workQueue.size() != 0)
+            messageQueue->enqueueWork(workQueue);
 
         while(!stopFlag) {
             tryPopulateWorkQueue();
