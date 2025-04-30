@@ -1,21 +1,21 @@
 #ifndef CLIENTHANDLER_H
 #define CLIENTHANDLER_H
 
+#include "MessageQueue.h"
+#include <stdio.h>
 #include <vector>
 #include <array>
 #include <atomic>
+#include <memory>
+#include <functional>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdio.h>
-#include <functional>
 
 namespace PrimeProcessor{
 
     class ClientHandler{
     private:
-        std::function<std::array<unsigned long long, 2>()> requestWorkCallback;
-        std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback;
-        std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback;
+        MessageQueue* messageQueue;
         std::function<void()> clientDisconnectedCallback;
 
         SOCKET clientSocket;
@@ -28,13 +28,7 @@ namespace PrimeProcessor{
         std::atomic_bool currentlyRunning = true;
 
     public:
-        ClientHandler(
-            SOCKET& s,
-            std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
-            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback,
-            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback,
-            std::function<void()> clientDisconnectedCallback
-        );
+        ClientHandler(SOCKET& s, MessageQueue* messageQueue, std::function<void()> clientDisconnectedCallback);
 
         // cloeses conenction with client
         void closeConnection();

@@ -1,17 +1,21 @@
 #include "ServerLogic.h"
 #include "MySockets.h"
-#include "NetworkManager.h"
 
 #include <iostream>
 #include <string>
+#include <thread>
+#include <memory>
 
 int main() {
     using namespace PrimeProcessor;
 
-    ServerLogic server;
-    server.start();
+    MessageQueue* messageQueue = new MessageQueue();
 
-    NetworkManager networkManager(server);
+    ServerLogic server(messageQueue);
+    std::thread serverThread(&ServerLogic::start, &server);
+
+    SocketManager socketManager(messageQueue);
+    socketManager.start();
 
     try {
         networkManager.start();
@@ -20,8 +24,12 @@ int main() {
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
-    networkManager.stop();
+    socketManager.stop();
+
     server.stop();
+    serverThread.join();
+
+    delete messageQueue;
 
     return 0;
 }

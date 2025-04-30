@@ -1,7 +1,7 @@
 #include "FileIO.h"
 #include <array>
 
-void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::deque<std::array<unsigned long long, 2>>& primesSearched){
+void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::vector<std::array<unsigned long long, 2>>& primesSearched){
     // Try to open files
     if(rangesSearched.fail()){
         rangesSearched.clear();
@@ -27,7 +27,7 @@ void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::deque<
     rangesSearched.close();
 }
 
-void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long>& primes){
+void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long> primes){
     for(const auto& cur : primes){
         primesFound << cur << " " << '\n';
         if (!primesFound) {
@@ -38,7 +38,7 @@ void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long>
     primes.shrink_to_fit();
 }
 
-void writeRangesSearched(std::fstream& rangesSearched, std::deque<std::array<unsigned long long, 2>>& primesSearched){
+void writeRangesSearched(std::fstream& rangesSearched, std::vector<std::array<unsigned long long, 2>>& primesSearched){
     rangesSearched.open(rangeFile, std::ios::out | std::ios::trunc);
     if(rangesSearched.fail()){
         throw "Fail";

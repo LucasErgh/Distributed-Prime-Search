@@ -9,11 +9,10 @@
 const std::string rangeFile = "../Ranges_Searched.txt";
 const std::string primeFile = "../Primes_Found.txt";
 
-void readIn(std::fstream& rangresSearched, std::fstream& primesFound, std::deque<std::array<unsigned long long, 2>>& primesSearched);
+void readIn(std::fstream& rangresSearched, std::fstream& primesFound, std::vector<std::array<unsigned long long, 2>>& primesSearched);
 
-void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long>& primes);
+void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long> primes);
 
-void writeRangesSearched(std::fstream& rangesSearched, std::deque<std::array<unsigned long long, 2>>& primesSearched);
-
+void writeRangesSearched(std::fstream& rangesSearched, std::vector<std::array<unsigned long long, 2>>& primesSearched);
 
 #endif

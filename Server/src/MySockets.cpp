@@ -6,12 +6,7 @@
 
 namespace PrimeProcessor{
 
-    // returns array client was searching to ServerLogic work queue
-    void SocketManager::searchFailed(std::array<unsigned long long, 2> arr){
-        server.workFailed(arr);
-    }
-
-    SocketManager::SocketManager(ServerInterface& s) : server(s){
+    SocketManager::SocketManager(MessageQueue* messageQueue) : messageQueue(messageQueue) {
         // Initialize WinSock
         WSAData wsaData;
         int iResult;
@@ -32,9 +27,7 @@ namespace PrimeProcessor{
         clientListMutex.lock();
         std::shared_ptr<ClientHandler> client = std::make_shared<ClientHandler>(
             c,
-            std::bind(&requestWork, this),
-            std::bind(&foundPrimes, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&searchFailed, this, std::placeholders::_1),
+            messageQueue,
             std::bind(&clientDisconnected, this)
         );
         std::thread cThread(ClientHandler::clientComs, client);
@@ -90,7 +83,6 @@ namespace PrimeProcessor{
             }
         }
     }
-
 
     void SocketManager::clientDisconnected(){
         clientsToClose++;
