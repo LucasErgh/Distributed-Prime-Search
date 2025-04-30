@@ -12,8 +12,9 @@ namespace PrimeProcessor {
     ServerLogic::ServerLogic(MessageQueue* messageQueue) :
         rangesSearched(std::fstream(rangeFile)),
         primesFound(std::fstream(primeFile, std::ios::app)),
-        messageQueue(messageQueue){
-            std::cerr << "Test inside ServerLogic Constructor\n";
+        messageQueue(messageQueue)
+    {
+
     }
 
     ServerLogic::~ServerLogic(){}

@@ -84,11 +84,11 @@ namespace PrimeProcessor{
                 return;
             }
 
-            // Prints for the sake of testing
-            std::cout << "Received following primes from client #" << key << ":\n";
-            for (auto i : primes) 
-                std::cout << i << std::endl; 
-            std::cout << "End of prime list" << std::endl;
+            //// Prints for the sake of testing
+            // std::cout << "Received following primes from client #" << key << ":\n";
+            // for (auto i : primes) 
+            //     std::cout << i << std::endl; 
+            // std::cout << "End of prime list" << std::endl;
 
             messageQueue->enqueuePrimesFound(primes, lastRange);
 
