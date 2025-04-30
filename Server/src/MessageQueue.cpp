@@ -6,6 +6,7 @@
 
 #include "MessageQueue.h"
 #include <algorithm>
+#include <iostream>
 
 namespace PrimeProcessor {
 
@@ -36,10 +37,14 @@ namespace PrimeProcessor {
 
     // Add new items to the workQueue
     void MessageQueue::enqueueWork(std::vector<std::array<unsigned long long, 2>>& ranges){
+        if (!this) {
+            std::cerr << "Test here, this is a weird issue\n";
+        }
+
         std::lock_guard<std::mutex> lock(queueMutex);
 
         for (auto& cur : ranges) {
-            workQueue.push_front(std::move(cur));
+            workQueue.push_front(cur);
         }
 
         if (workQueue.size() >= 50) {

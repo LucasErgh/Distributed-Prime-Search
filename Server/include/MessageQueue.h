@@ -17,8 +17,8 @@ namespace PrimeProcessor {
 
     class MessageQueue{
     private:
-
         std::mutex queueMutex;
+
         std::atomic_bool needQueueRefilled = true;
         std::atomic_bool primesToReceive = false;
         std::atomic_bool workToReceive = false;

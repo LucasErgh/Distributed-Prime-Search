@@ -9,11 +9,11 @@
 
 namespace PrimeProcessor {
 
-    ServerLogic::ServerLogic(std::shared_ptr<MessageQueue> messageQueue) :
+    ServerLogic::ServerLogic(std::shared_ptr<MessageQueue>& messageQueue) :
         rangesSearched(std::fstream(rangeFile)),
         primesFound(std::fstream(primeFile, std::ios::app)),
         messageQueue(messageQueue){
-
+            std::cerr << "Test inside ServerLogic Constructor\n";
     }
 
     ServerLogic::~ServerLogic(){}

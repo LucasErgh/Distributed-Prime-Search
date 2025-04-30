@@ -39,7 +39,7 @@ namespace PrimeProcessor{
         void combineRangesBeforeWrite(std::vector<std::array<unsigned long long, 2>> &r);
 
     public:
-        ServerLogic(std::shared_ptr<MessageQueue> messageQueue);
+        ServerLogic(std::shared_ptr<MessageQueue>& messageQueue);
         ~ServerLogic();
 
         void start();

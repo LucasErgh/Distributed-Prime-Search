@@ -26,7 +26,7 @@ namespace PrimeProcessor{
     class SocketManager{
     public:
 
-        SocketManager(std::shared_ptr<MessageQueue> messageQueue);
+        SocketManager(std::shared_ptr<MessageQueue>& messageQueue);
         ~SocketManager();
         
         void start();

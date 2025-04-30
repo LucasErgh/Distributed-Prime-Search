@@ -6,7 +6,7 @@
 
 namespace PrimeProcessor{
 
-    SocketManager::SocketManager(std::shared_ptr<MessageQueue> messageQueue) : messageQueue(messageQueue) {
+    SocketManager::SocketManager(std::shared_ptr<MessageQueue>& messageQueue) : messageQueue(messageQueue) {
         // Initialize WinSock
         WSAData wsaData;
         int iResult;
@@ -83,7 +83,6 @@ namespace PrimeProcessor{
             }
         }
     }
-
 
     void SocketManager::clientDisconnected(){
         clientsToClose++;
