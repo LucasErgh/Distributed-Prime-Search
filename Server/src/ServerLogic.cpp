@@ -39,16 +39,21 @@ namespace PrimeProcessor {
         }
 
         // Now shutdown server
-        storeToFile(messageQueue->pretreivePrimesSearched(), messageQueue->retreivePrimesFound());
-        primesFound.close();
 
+        storeToFile();
+
+        primesFound.close();
     }
 
     void ServerLogic::stop(){
         stopFlag = true;
     }
 
-    void ServerLogic::storeToFile(std::vector<std::array<unsigned long long, 2>> primesSearched, std::vector<unsigned long long> primes){
+    void ServerLogic::storeToFile(){
+        std::vector<unsigned long long> primes = messageQueue->retreivePrimesFound();
+
+        auto newSearched = messageQueue->pretreivePrimesSearched();
+        primesSearched.insert(primesSearched.end(), newSearched.begin(), newSearched.end());
 
         combineRangesBeforeWrite(primesSearched);
         writeRangesSearched(rangesSearched, primesSearched);

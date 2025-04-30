@@ -27,7 +27,7 @@ namespace PrimeProcessor{
 
         // Stores set of primes on drive
         // Called when Prime set gets too big or the server is closing
-        void storeToFile(std::vector<std::array<unsigned long long, 2>> primesSearched, std::vector<unsigned long long> primes);
+        void storeToFile();
 
         // populate workQueue when it gets low
         void tryPopulateWorkQueue();

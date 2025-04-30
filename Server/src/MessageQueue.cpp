@@ -80,8 +80,11 @@ namespace PrimeProcessor {
         if (i != rangesInProgress.end()){
             rangesSearched.push_back({(*i)[0], (*i)[1]});
             rangesInProgress.erase(i);
+            primesFound.insert(primesFound.end(), primes.begin(), primes.end());
         }
-        primesFound.insert(primesFound.end(), primes.begin(), primes.end());
+        else {
+            std::cerr << "Primes were found that were not in the rangesInProgress queue\n";
+        }
     }
 
     // Retrieve all primes found currently in vector
