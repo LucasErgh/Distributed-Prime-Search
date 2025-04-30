@@ -11,6 +11,7 @@ set(Sources
     "ClientHandler.cpp"
     "Listener.cpp"
     "MessageQueue.cpp"
+    "NetworkManager.cpp"
 )
 
 add_library(srcServer ${Sources})
