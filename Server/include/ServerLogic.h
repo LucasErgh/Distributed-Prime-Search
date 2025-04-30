@@ -6,8 +6,6 @@
 #include <stdexcept>
 #include <memory>
 #include <vector>
-#include <deque>
-#include <set>
 #include <mutex>
 #include <thread>
 
@@ -44,7 +42,7 @@ namespace PrimeProcessor{
         ServerLogic(std::shared_ptr<MessageQueue> messageQueue);
         ~ServerLogic();
 
-        bool start();
+        void start();
         void stop();
 
         // called by the server manager to get the next range to search

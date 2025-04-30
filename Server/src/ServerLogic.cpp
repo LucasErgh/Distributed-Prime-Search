@@ -18,7 +18,7 @@ namespace PrimeProcessor {
 
     ServerLogic::~ServerLogic(){}
 
-    bool ServerLogic::start(){
+    void ServerLogic::start(){
         // read data from file
         readIn(rangesSearched, primesFound, primesSearched);
 
@@ -39,7 +39,6 @@ namespace PrimeProcessor {
         storeToFile(messageQueue->emergencyDequeue(), messageQueue->retreivePrimesFound());
         primesFound.close();
 
-        return true;
     }
 
     void ServerLogic::stop(){
