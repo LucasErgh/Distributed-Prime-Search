@@ -39,7 +39,7 @@ namespace PrimeProcessor {
         }
 
         // Now shutdown server
-        storeToFile(messageQueue->emergencyDequeue(), messageQueue->retreivePrimesFound());
+        storeToFile(messageQueue->pretreivePrimesSearched(), messageQueue->retreivePrimesFound());
         primesFound.close();
 
     }

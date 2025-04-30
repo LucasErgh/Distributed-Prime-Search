@@ -32,7 +32,8 @@ namespace PrimeProcessor {
         // Vector of prime numbers found
         std::vector<unsigned long long> primesFound;
 
-        // TODO add a vector of primes that have been searched
+        // Primes that have been searched by clients
+        std::vector<std::array<unsigned long long, 2>> rangesSearched;
 
     public:
 
@@ -59,7 +60,7 @@ namespace PrimeProcessor {
         bool primesToRetreive();
 
         // Returnes a vector of all ranges in progess and in the work queue
-        std::vector<std::array<unsigned long long, 2>> emergencyDequeue();
+        std::vector<std::array<unsigned long long, 2>> pretreivePrimesSearched();
     };
 }
 

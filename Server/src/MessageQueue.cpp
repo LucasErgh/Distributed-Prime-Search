@@ -78,7 +78,7 @@ namespace PrimeProcessor {
         std::lock_guard<std::mutex> lock(queueMutex);
         auto i = std::find_if(rangesInProgress.begin(), rangesInProgress.end(), [&lastRange](auto &pair){ return pair[0] == lastRange[0] && pair[1] == lastRange[1]; });
         if (i != rangesInProgress.end()){
-            // TODO Add vector of prime numbers searched and add the range searched here
+            rangesSearched.push_back({(*i)[0], (*i)[1]});
             rangesInProgress.erase(i);
         }
         primesFound.insert(primesFound.end(), primes.begin(), primes.end());
@@ -97,22 +97,13 @@ namespace PrimeProcessor {
     }
 
     // Returnes a vector of all ranges in progess and in the work queue
-    std::vector<std::array<unsigned long long, 2>> MessageQueue::emergencyDequeue(){
+    std::vector<std::array<unsigned long long, 2>> MessageQueue::pretreivePrimesSearched(){
         std::lock_guard<std::mutex> lock(queueMutex);
 
-        std::vector<std::array<unsigned long long, 2>> allWorkRanges;
+        auto vec = rangesSearched;
+        rangesSearched.clear();
 
-        allWorkRanges.reserve(rangesInProgress.size() + workQueue.size());
-
-        allWorkRanges.insert(allWorkRanges.end(), 
-                             std::make_move_iterator(workQueue.begin()), 
-                             std::make_move_iterator(workQueue.end()));
-
-        allWorkRanges.insert(allWorkRanges.end(),
-                             std::make_move_iterator(rangesInProgress.begin()),
-                             std::make_move_iterator(rangesInProgress.end()));
-
-        return allWorkRanges;
+        return vec;
     }
 
 }
