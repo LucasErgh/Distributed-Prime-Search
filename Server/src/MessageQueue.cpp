@@ -42,9 +42,6 @@ namespace PrimeProcessor {
 
     // Add new items to the workQueue
     void MessageQueue::enqueueWork(std::vector<std::array<unsigned long long, 2>>& ranges){
-        if (!this) {
-            std::cerr << "Test here, this is a weird issue\n";
-        }
 
         std::lock_guard<std::mutex> lock(queueMutex);
 
