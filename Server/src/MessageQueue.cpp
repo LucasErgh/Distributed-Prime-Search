@@ -64,9 +64,9 @@ namespace PrimeProcessor {
     }
 
     // Add primes found to a queue to be retreived and stored
-    void MessageQueue::enqueuePrimesFound(std::vector<unsigned long long>& primes){
+    void MessageQueue::enqueuePrimesFound(std::vector<unsigned long long>& primes, std::array<unsigned long long, 2> lastRange){
         std::lock_guard<std::mutex> lock(queueMutex);
-
+        rangesInProgress.erase(std::find(rangesInProgress.begin(), rangesInProgress.end(), lastRange));
         primesFound.insert(primesFound.end(), primes.begin(), primes.end());
     }
 

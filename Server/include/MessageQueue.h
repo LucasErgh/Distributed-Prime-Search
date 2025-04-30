@@ -49,7 +49,7 @@ namespace PrimeProcessor {
         void searchFailed(std::array<unsigned long long, 2>& message);
 
         // Add primes found to a queue to be retreived and stored
-        void enqueuePrimesFound(std::vector<unsigned long long>& primes);
+        void enqueuePrimesFound(std::vector<unsigned long long>& primes, std::array<unsigned long long, 2> lastRange);
 
         // Retrieve all primes found currently in vector
         std::vector<unsigned long long> retreivePrimesFound();

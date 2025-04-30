@@ -18,7 +18,7 @@ namespace PrimeProcessor{
 
     void ClientHandler::commsFailed(){
         std::cout << "Client connection unexpectedly closed: " << key << ".\n";
-        searchFailedCallback(lastRange);
+        messageQueue->searchFailed(lastRange);
         closeConnection();
     }
 
@@ -90,10 +90,10 @@ namespace PrimeProcessor{
                 std::cout << i << std::endl; 
             std::cout << "End of prime list" << std::endl;
 
-            foundPrimesCallback(primes, lastRange); 
+            messageQueue->enqueuePrimesFound(primes, lastRange);
 
             // send client new range of primes
-            lastRange = requestWorkCallback();
+            lastRange = messageQueue->dequeueWork();
             lastSent = createMsg(lastRange);
             iSendResult = send(clientSocket, reinterpret_cast<char*>(lastSent.data()), lastSent.size(), 0);
             if (iSendResult == SOCKET_ERROR){
@@ -113,18 +113,12 @@ namespace PrimeProcessor{
         closeConnection();
     }
 
-    ClientHandler::ClientHandler(
-            SOCKET& s,
-            std::function<std::array<unsigned long long, 2>()> requestWorkCallback,
-            std::function<void(std::vector<unsigned long long>, std::array<unsigned long long, 2>)> foundPrimesCallback,
-            std::function<void(std::array<unsigned long long, 2>)> searchFailedCallback,
-            std::function<void()> clientDisconnectedCallback
-        )
-        : clientSocket(s),
+    ClientHandler::ClientHandler(SOCKET& s, std::shared_ptr<MessageQueue> messageQueue, std::function<void()> clientDisconnectedCallback) : 
+        clientSocket(s),
         key(nextKey++),
-        requestWorkCallback(requestWorkCallback),
-        foundPrimesCallback(foundPrimesCallback),
-        searchFailedCallback(searchFailedCallback),
-        clientDisconnectedCallback(clientDisconnectedCallback)
-        {}
+        messageQueue(messageQueue),
+        clientDisconnectedCallback(clientDisconnectedCallback) 
+    {
+
+    }
 }
