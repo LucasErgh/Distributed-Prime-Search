@@ -17,12 +17,7 @@ int main() {
     SocketManager socketManager(messageQueue);
     socketManager.start();
 
-    try {
-        networkManager.start();
-        // Keep the server running or add logic to handle shutdown
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
+    std::cin.get();
 
     socketManager.stop();
 
