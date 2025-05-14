@@ -36,6 +36,7 @@ namespace PrimeProcessor {
         struct ClientContext{
             SOCKET socket;
             std::vector<char> receiveBuffer;
+            int key;
         };
 
         MessageQueue* messageQueue;

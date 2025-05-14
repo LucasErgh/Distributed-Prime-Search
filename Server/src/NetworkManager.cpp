@@ -40,31 +40,7 @@ namespace PrimeProcessor {
     }
 
     void NetworkManager::workerThread(){
-        unsigned long IOSize = 0;
-        PULONG_PTR completionKey;
-        PerIOContext* pPerIOContext;
-        LPWSAOVERLAPPED lpOverlapped = NULL;
 
-        while( true ){
-            auto bSuccess = GetQueuedCompletionStatus(iocp, &IOSize, completionKey, (LPOVERLAPPED*)&lpOverlapped, INFINITE);
-
-            if (!bSuccess)
-                std::cerr << "GetQueuedCompletionStatus() failed: " << GetLastError() << '\n';
-
-            pPerIOContext = (PerIOContext*)lpOverlapped;
-
-            switch (pPerIOContext->operationType)
-            {
-            case 0 /* Accept New Connection */:
-                break;
-
-            case 1:
-                break;
-
-            default:
-                break;
-            }
-        }
     }
 
     void NetworkManager::handleClientMessage(){
@@ -122,6 +98,19 @@ namespace PrimeProcessor {
             return(FALSE);
         }
 
+        GUID acceptexID = WSAID_ACCEPTEX;
+        DWORD bytes = 0;
+
+        // Load AcceptEx extension
+        auto nRet = WSAIoctl(
+            listenSocket,
+            SIO_GET_EXTENSION_FUNCTION_POINTER,
+            &acceptexID, sizeof(acceptexID),
+            &AcceptEx, sizeof(AcceptEx),
+            &bytes,
+            NULL,
+            NULL
+        );
     }
 
     bool NetworkManager::CreateAcceptSocket(){
