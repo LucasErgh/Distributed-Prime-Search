@@ -9,7 +9,6 @@ namespace PrimeProcessor {
     };
 
     NetworkManager::NetworkManager(MessageQueue* messageQueue) : messageQueue(messageQueue) {
-
     }
 
     NetworkManager::~NetworkManager(){
@@ -22,7 +21,7 @@ namespace PrimeProcessor {
             throw std::runtime_error("WSAStartup failed with error: " + WSAGetLastError());
         }
 
-        if ( (iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, maxThreads)) == NULL ){
+        if ( (iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL ){
             throw std::runtime_error("CreateIoCompletionPort failed");
         }
 
@@ -34,18 +33,6 @@ namespace PrimeProcessor {
             throw std::runtime_error("Failed to create listener socket\n");
         }
 
-        // Loop accepting connections
-        while (true){
-            acceptSocket = WSAAccept(listenSocket, NULL, NULL, NULL, 0);
-            if (acceptSocket == SOCKET_ERROR){
-                std::cerr << "WSAAccept() failed: " << WSAGetLastError() << '\n';
-            }
-
-            // add socket descriptor to the IOCP along with its accociated key data
-
-
-            // post initial receive on this socket
-        }
     }
 
     void NetworkManager::stop(){
@@ -53,7 +40,31 @@ namespace PrimeProcessor {
     }
 
     void NetworkManager::workerThread(){
+        unsigned long IOSize = 0;
+        PULONG_PTR completionKey;
+        PerIOContext* pPerIOContext;
+        LPWSAOVERLAPPED lpOverlapped = NULL;
 
+        while( true ){
+            auto bSuccess = GetQueuedCompletionStatus(iocp, &IOSize, completionKey, (LPOVERLAPPED*)&lpOverlapped, INFINITE);
+
+            if (!bSuccess)
+                std::cerr << "GetQueuedCompletionStatus() failed: " << GetLastError() << '\n';
+
+            pPerIOContext = (PerIOContext*)lpOverlapped;
+
+            switch (pPerIOContext->operationType)
+            {
+            case 0 /* Accept New Connection */:
+                break;
+
+            case 1:
+                break;
+
+            default:
+                break;
+            }
+        }
     }
 
     void NetworkManager::handleClientMessage(){
@@ -81,8 +92,11 @@ namespace PrimeProcessor {
             return(FALSE);
         }
 
-        listenSocket = WSASocket(addrlocal->ai_family, addrlocal->ai_socktype, addrlocal->ai_protocol, 
-                            NULL, 0, WSA_FLAG_OVERLAPPED); 
+        listenSocket = WSASocket(
+            addrlocal->ai_family, addrlocal->ai_socktype, addrlocal->ai_protocol,
+            NULL, 0, WSA_FLAG_OVERLAPPED
+        );
+
         if( listenSocket == INVALID_SOCKET ) {
             std::cerr << "WSASocket(listenSocket) failed:" << WSAGetLastError() << '\n';
             return(FALSE);
@@ -107,9 +121,11 @@ namespace PrimeProcessor {
             std::cerr << "setsockopt(SNDBUF) failed: " << WSAGetLastError() << '\n';
             return(FALSE);
         }
+
     }
 
-    void listenClientConnections(){
+    bool NetworkManager::CreateAcceptSocket(){
+
 
     }
 }
