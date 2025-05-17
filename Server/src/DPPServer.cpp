@@ -17,7 +17,13 @@ int main() {
     std::thread serverThread(&ServerLogic::start, &server);
 
     NetworkManager networkManager(messageQueue);
-    networkManager.start();
+    try{
+        networkManager.start();
+    } catch (std::string& e) {
+        std::cerr << e << '\n';
+    } catch (...) {
+        std::cerr << "Caught in main()";
+    }
 
     std::cin.get();
 

@@ -29,8 +29,6 @@ namespace PrimeProcessor {
         if ( (iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)) == NULL ){
             throw std::runtime_error("CreateIoCompletionPort failed");
         }
-        CreateIoCompletionPort((HANDLE)listenSocket, iocp, (ULONG_PTR)listenSocket, 0);
-
         for (int i = 0; i < maxThreads; ++i){
             workers.emplace_back(&workerThread, this);
         }
@@ -38,6 +36,8 @@ namespace PrimeProcessor {
 
     void NetworkManager::start() {
         initialize();
+
+        CreateAcceptSocket();
 
         LPDWORD bytes;
         SOCKET acceptSocket;
@@ -63,7 +63,7 @@ namespace PrimeProcessor {
             );
 
             if (!success)
-                throw("NO NO NO");
+                throw(std::string("NO NO NO, GetQueuedCompletionStatus"));
             
             socketContext->context->bytesTransfered += bytes;
 
@@ -102,7 +102,7 @@ namespace PrimeProcessor {
 
         // @TODO error handling
         if (socketContext->context->acceptSocket == INVALID_SOCKET)
-            throw("NO NO NO");
+            throw(std::string("NO NO NO"));
 
         PerSocketContext* newSock = new PerSocketContext(socketContext->context->acceptSocket);
         iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
@@ -160,7 +160,7 @@ namespace PrimeProcessor {
             bool success = readMsg(socketContext->context->payload, socketContext->context->PayloadSize, primes);
 
             if (!success)
-                throw ("NO NO NO");
+                throw (std::string("NO NO NO, readMSG"));
 
             messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
 
@@ -258,14 +258,14 @@ namespace PrimeProcessor {
 
         // @TODO handle error
 
-        PerSocketContext* context = new PerSocketContext();
+        PerSocketContext* context = new PerSocketContext(listenSocket);
         context->context->acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
         context->context->operation = ACCEPT;
 
         iocp = CreateIoCompletionPort((HANDLE)listenSocket, iocp, (DWORD_PTR)context, 0);
 
         if (iocp == nullptr)
-            throw("NO NO NO");
+            throw(std::string("NO NO NO, CreateIOCOmpletionPort"));
 
         context->socket = listenSocket;
         context->context->acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
