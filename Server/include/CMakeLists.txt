@@ -2,7 +2,6 @@ set(Includes
     "ServerLogic.h"
     "MySockets.h"
     "FileIO.h"
-    "ServerInterface.h"
     "ClientHandler.h"
     "Listener.h"
     "MessageQueue.h"
