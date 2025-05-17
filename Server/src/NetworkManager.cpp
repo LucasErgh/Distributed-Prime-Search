@@ -39,8 +39,6 @@ namespace PrimeProcessor {
     void NetworkManager::start() {
         initialize();
 
-        CreateListenSocket();
-
         LPDWORD bytes;
         SOCKET acceptSocket;
         // AcceptEx(listenSocket, acceptSocket)
