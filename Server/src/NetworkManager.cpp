@@ -194,6 +194,7 @@ namespace PrimeProcessor {
         hints.ai_family = AF_INET;
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_IP;
+        hints.ai_flags = AI_PASSIVE;
 
         if( getaddrinfo(nullptr, DEFAULT_PORT, &hints, &addrlocal) != 0 ) {
             std::cerr << "getaddrinfo() failed with error" << WSAGetLastError() << '\n';
