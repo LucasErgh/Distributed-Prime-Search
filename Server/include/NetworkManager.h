@@ -5,6 +5,7 @@
 #include "Serialization.h"
 #include "config.h"
 #include <vector>
+#include <list>
 #include <thread>
 #include <winsock2.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ namespace PrimeProcessor {
 
         struct PerIOContext{
             WSAOVERLAPPED overlapped;
-            WSABUF wsaBuffer;
+            WSABUF wsaBuffer{};
             std::vector<std::byte> message;
             unsigned long long bytesTransfered;
             char header[3];
@@ -33,12 +34,20 @@ namespace PrimeProcessor {
             SOCKET acceptSocket;
             OperationType operation;
 
-            PerIOContext() : acceptSocket(INVALID_SOCKET) {
+            PerIOContext() : 
+                acceptSocket(INVALID_SOCKET),
+                bytesRead(0),
+                bytesTransfered(0),
+                PayloadSize(0)
+            {
+                ZeroMemory(&overlapped, sizeof(overlapped));
                 overlapped.Internal = 0;
                 overlapped.InternalHigh = 0;
                 overlapped.Offset = 0;
                 overlapped.OffsetHigh = 0;
                 overlapped.hEvent = NULL;
+                message.resize(3);
+                payload.resize(0);
             }
         };
 
@@ -47,10 +56,10 @@ namespace PrimeProcessor {
             LPFN_ACCEPTEX fnAcceptEx;
             std::vector<std::byte> lastSentMessage;
             std::array<unsigned long long, 2> lastRange;
-            std::unique_ptr<PerIOContext> context;
+            std::list<PerIOContext*> context;
 
             PerSocketContext(SOCKET socket = INVALID_SOCKET) : socket(socket) {
-                context = std::make_unique<PerIOContext>();
+
             }
         };
 
@@ -74,15 +83,15 @@ namespace PrimeProcessor {
         DWORD threadId = 0;
 
         std::vector<PerSocketContext*> clients;
-        std::mutex clientMutex;
+        std::mutex clientsMutex;
 
         SOCKET listenSocket;
         PerSocketContext* listenSocketContext;
 
         void workerThread();
-        void handleSendMessage(PerSocketContext* socketContext);
-        void handleReceiveMessage(PerSocketContext* socketContext);
-        void handleAccept(PerSocketContext* socketContext);
+        void handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
+        void handleReceiveMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
+        void handleAccept(PerSocketContext* socketContext, PerIOContext* IOContext);
 
         bool CreateListenSocket();
         void CreateAcceptSocket();
