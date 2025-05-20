@@ -5,11 +5,8 @@ set(Dirs
 
 set(Sources 
     "DPPServer.cpp"
-    "MySockets.cpp"
     "ServerLogic.cpp"
     "FileIO.cpp"
-    "ClientHandler.cpp"
-    "Listener.cpp"
     "MessageQueue.cpp"
     "NetworkManager.cpp"
 )
