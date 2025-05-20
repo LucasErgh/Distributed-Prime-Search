@@ -117,8 +117,8 @@ namespace PrimeProcessor {
                         throw (std::string("NO NO NO, readMSG"));
                     messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
                     handleSendMessage(socketContext, IOContext);
+                    break;
                 }
-                break;
 
             default:
                 // @TODO handle error
