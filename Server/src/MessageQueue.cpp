@@ -16,10 +16,7 @@ namespace PrimeProcessor {
 
         std::array<unsigned long long, 2> back = workQueue.back();
 
-        std::cerr << "Back: " << back[0] << ", " << back[1] << std::endl;
-        std::cerr << "Size before: " << rangesInProgress.size() << std::endl;
         rangesInProgress.push_back(back);
-        std::cerr << "Size after: " << rangesInProgress.size() << std::endl;
 
         workQueue.pop_back();
 

@@ -60,7 +60,7 @@ void Connection::serverComms(){
         // send message
         std::vector<unsigned long long> primes = worker.getPrimes();
         std::vector<std::byte> message = createMsg(primes);
-        
+        std::cerr << "First byte of message: " << std::to_string((uint8_t)message[0]) << '\n';
 
         std::cout << "Sending server the following primes: " << std::endl;
         for (auto i : primes){

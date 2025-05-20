@@ -69,7 +69,11 @@ namespace PrimeProcessor {
             
             PerIOContext* IOContext = CONTAINING_RECORD(lpOverlapped, PerIOContext, overlapped);
 
+            std::cerr << "Socket: " << socketContext->socket << "\n" 
+                << "\tBytes Transfered: " << bytes << "\n"
+                << "\tIO Operation: " << IOContext->operation << "\n";
             IOContext->bytesTransfered += bytes;
+            std::cerr << "WSALastError: " << WSAGetLastError() << '\n';
 
             switch (IOContext->operation)
             {
@@ -81,7 +85,8 @@ namespace PrimeProcessor {
                     handleReceiveMessage(socketContext, IOContext);
                 break;
 
-            case RECV:
+            case RECVHEADER:
+            case RECVPAYLOAD:
                     handleReceiveMessage(socketContext, IOContext);
                 break;
 
@@ -91,7 +96,7 @@ namespace PrimeProcessor {
             }
         }
 
-        // Stop thread logic
+        // @TODO Stop thread logic
     }
 
     void NetworkManager::handleAccept(PerSocketContext* socketContext, PerIOContext* IOContext) {
@@ -111,83 +116,48 @@ namespace PrimeProcessor {
         iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
         clients.push_back(newSock);
 
-        newSock->context.emplace_back(new PerIOContext());
+        handleSendMessage(newSock, IOContext);
 
-        handleSendMessage(newSock, newSock->context.back());
+        CreateAcceptSocket();
     }
 
     void NetworkManager::handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext) {
-        socketContext->lastRange = messageQueue->dequeueWork();
-
         PerIOContext* newIOContext = new PerIOContext();
         socketContext->context.push_back(newIOContext);
-        newIOContext->operation = SEND;
-        newIOContext->message = createMsg(socketContext->lastRange);
-        newIOContext->bytesTransfered = newIOContext->message.size();
-        newIOContext->wsaBuffer.buf = (char*)newIOContext->message.data();
-        newIOContext->wsaBuffer.len = newIOContext->message.size();
-        auto nRet = WSASend(
-            socketContext->socket,
-            &newIOContext->wsaBuffer, 1,
-            NULL,
-            0,
-            &newIOContext->overlapped,
-            NULL
-        );
+
+        socketContext->lastRange = messageQueue->dequeueWork();
+        socketContext->lastSentMessage = createMsg(socketContext->lastRange);
+        PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
     }
 
     void NetworkManager::handleReceiveMessage(PerSocketContext* socketContext, PerIOContext* IOContext) {
+        if (IOContext->operation == SEND) {
+            PerIOContext* newIOContext = new PerIOContext();
+            socketContext->context.push_back(newIOContext);
 
-        DWORD dwFlags = 0;
-        PerIOContext* newIOContext = new PerIOContext();
-        socketContext->context.push_back(newIOContext);
+            // std::cerr << "Hit first block in handleReceiveMessage\n";
+            newIOContext->operation = RECVHEADER;
+            PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
 
-        if (IOContext->bytesRead == 0) {
-            std::cerr << "Hit first block in handleReceiveMessage\n";
-            newIOContext->bytesRead = 3;
-            newIOContext->wsaBuffer.buf = newIOContext->header;
-            newIOContext->wsaBuffer.len = sizeof(newIOContext->header);
-            ZeroMemory(newIOContext->wsaBuffer.buf, newIOContext->wsaBuffer.len);
-            newIOContext->operation = RECV;
-            assert(newIOContext->wsaBuffer.buf == newIOContext->header);
-            assert(newIOContext->wsaBuffer.len == sizeof(newIOContext->header));
-            int retval = WSARecv(
-                socketContext->socket,
-                (LPWSABUF)&(newIOContext->wsaBuffer), 1,
-                NULL,
-                &dwFlags,
-                &newIOContext->overlapped,
-                NULL
-            );
-
-        } else if (IOContext->bytesRead == 3) {
-            std::cerr << "Hit second block in handleReceiveMessage\n";
+        } else if (IOContext->operation == RECVHEADER) {
+            // std::cerr << "They hit the second block in handleReceiveMessage\n";
             // read header
             int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
 
             if (msgType == CLOSE_CONNECTION) {
                 // @TODO close connection
+                std::cerr << "Close Connection\n\n";
                 return;
             }
 
+            IOContext->operation = RECVPAYLOAD;
             IOContext->bytesRead += IOContext->PayloadSize;
-            IOContext->payload.resize(IOContext->PayloadSize);
-            IOContext->wsaBuffer.buf = (char*)IOContext->payload.data();
-            IOContext->wsaBuffer.len = IOContext->PayloadSize;
-            WSARecv(
-                socketContext->socket,
-                &IOContext->wsaBuffer, 1,
-                NULL,
-                &dwFlags,
-                &IOContext->overlapped,
-                NULL
-            );
+            IOContext->payload.resize(IOContext->PayloadSize * sizeof(unsigned long long));
+            PostRecv(socketContext->socket, IOContext, (char*)IOContext->payload.data(), (IOContext->PayloadSize * sizeof(unsigned long long)));
 
         } else {
-            std::cerr << "Hit third block in handleReceiveMessage\n";
+            // std::cerr << "Hit third block in handleReceiveMessage\n";
             // read payload & Send Message
-            IOContext->payload.resize(IOContext->PayloadSize);
-            memcpy(IOContext->payload.data(), IOContext->wsaBuffer.buf, sizeof(IOContext->wsaBuffer.buf));
             std::vector<unsigned long long> primes(IOContext->PayloadSize);
             std::fill(primes.begin(), primes.end(), 0);
             bool success = readMsg(IOContext->payload, IOContext->PayloadSize, primes);
@@ -197,22 +167,47 @@ namespace PrimeProcessor {
 
             messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
 
+            PerIOContext* newIOContext = new PerIOContext();
+            socketContext->context.push_back(newIOContext);
             socketContext->lastRange = messageQueue->dequeueWork();
             socketContext->lastSentMessage = createMsg(socketContext->lastRange);
-            newIOContext->message = socketContext->lastSentMessage;
-            newIOContext->wsaBuffer.buf = (char*)newIOContext->message.data();
-            newIOContext->wsaBuffer.len = newIOContext->message.size();
-            DWORD bytes = 3;
-            newIOContext->operation = RECV;
-            WSASend(
-                socketContext->socket,
-                &newIOContext->wsaBuffer, 1,
-                NULL,
-                0,
-                &newIOContext->overlapped,
-                NULL
-            );
+            PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
+
         }
+    }
+
+    void NetworkManager::PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize) {
+        DWORD dwFlags = 0;
+        //ZeroMemory(buffer, bufferSize);
+        IOContext->wsaBuffer.buf = buffer;
+        IOContext->wsaBuffer.len = bufferSize;
+        int retval = WSARecv(
+            socket,
+            (LPWSABUF)&(IOContext->wsaBuffer), 1,
+            NULL,
+            &dwFlags,
+            &IOContext->overlapped,
+            NULL
+        );
+    
+        if (retval != 0) {
+            std::cerr << "WSARecv Failed, WSALastError: " << WSAGetLastError() << '\n';
+        }
+    }
+
+    void NetworkManager::PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg) {
+        IOContext->message = msg;
+        IOContext->wsaBuffer.buf = (char*)IOContext->message.data();
+        IOContext->wsaBuffer.len = IOContext->message.size();
+        IOContext->operation = SEND;
+        WSASend(
+            socket,
+            &IOContext->wsaBuffer, 1,
+            NULL,
+            0,
+            &IOContext->overlapped,
+            NULL
+        );
     }
 
     bool NetworkManager::CreateListenSocket() {
@@ -288,17 +283,19 @@ namespace PrimeProcessor {
     }
 
     void NetworkManager::CreateAcceptSocket(){
-
+        static bool needUpdateIOCP = true;
         // @TODO handle error
 
-        PerSocketContext* context = new PerSocketContext(listenSocket);
         PerIOContext* ioContext = new PerIOContext();
-        context->context.push_back(ioContext);
+        listenSocketContext->context.push_back(ioContext);
 
         ioContext->acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
         ioContext->operation = ACCEPT;
 
-        iocp = CreateIoCompletionPort((HANDLE)listenSocket, iocp, (DWORD_PTR)context, 0);
+        if (needUpdateIOCP) {
+            iocp = CreateIoCompletionPort((HANDLE)listenSocket, iocp, (DWORD_PTR)ioContext, 0);
+            needUpdateIOCP = false;
+        }
 
         auto error = WSAGetLastError();
         if (iocp == nullptr && error != ERROR_IO_PENDING){
@@ -319,7 +316,7 @@ namespace PrimeProcessor {
             &bytesReceived,
             (LPOVERLAPPED) &(ioContext->overlapped)
         );
-        context->context.push_back(std::move(ioContext));
+        listenSocketContext->context.push_back(std::move(ioContext));
 
         error = WSAGetLastError();
         if (nRet == 0 && error != ERROR_IO_PENDING){

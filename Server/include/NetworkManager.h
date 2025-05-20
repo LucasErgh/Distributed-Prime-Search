@@ -19,7 +19,10 @@ namespace PrimeProcessor {
         enum OperationType{
             ACCEPT,
             SEND,
-            RECV
+            RECVHEADER,
+            RECVPAYLOAD,
+            CLOSE,
+            NONE
         };
 
         struct PerIOContext{
@@ -92,6 +95,9 @@ namespace PrimeProcessor {
         void handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
         void handleReceiveMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
         void handleAccept(PerSocketContext* socketContext, PerIOContext* IOContext);
+
+        void PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize);
+        void PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg);
 
         bool CreateListenSocket();
         void CreateAcceptSocket();
