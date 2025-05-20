@@ -38,12 +38,7 @@ namespace PrimeProcessor {
 
     void NetworkManager::start() {
         initialize();
-
         CreateAcceptSocket();
-
-        LPDWORD bytes;
-        SOCKET acceptSocket;
-        // AcceptEx(listenSocket, acceptSocket)
     }
 
     void NetworkManager::stop(){
@@ -69,25 +64,60 @@ namespace PrimeProcessor {
             
             PerIOContext* IOContext = CONTAINING_RECORD(lpOverlapped, PerIOContext, overlapped);
 
-            std::cerr << "Socket: " << socketContext->socket << "\n" 
-                << "\tBytes Transfered: " << bytes << "\n"
-                << "\tIO Operation: " << IOContext->operation << "\n";
             IOContext->bytesTransfered += bytes;
-            std::cerr << "WSALastError: " << WSAGetLastError() << '\n';
 
             switch (IOContext->operation)
             {
             case ACCEPT:
-                    handleAccept(socketContext, IOContext);
-                break;
-
+                {
+                    auto nRet = setsockopt(
+                        IOContext->acceptSocket,
+                        SOL_SOCKET,
+                        SO_UPDATE_ACCEPT_CONTEXT,
+                        (char*)&listenSocket,
+                        sizeof(listenSocket)
+                    );
+                    // @TODO error handling
+                    if (IOContext->acceptSocket == INVALID_SOCKET)
+                        throw(std::string("NO NO NO"));
+                    PerSocketContext* newSock = new PerSocketContext(std::move(IOContext->acceptSocket));
+                    iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
+                    clients.push_back(newSock);
+                    handleSendMessage(newSock, IOContext);
+                    CreateAcceptSocket();
+                    break;
+                }
             case SEND:
-                    handleReceiveMessage(socketContext, IOContext);
-                break;
-
+                {
+                    PerIOContext* newIOContext = new PerIOContext();
+                    socketContext->context.push_back(newIOContext);
+                    newIOContext->operation = RECVHEADER;
+                    PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
+                    break;
+                }
             case RECVHEADER:
+                {
+                    int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
+                    if (msgType == CLOSE_CONNECTION) {
+                        // @TODO close connection
+                        std::cerr << "Close Connection\n\n";
+                        return;
+                    }
+                    IOContext->operation = RECVPAYLOAD;
+                    IOContext->payload.resize(IOContext->PayloadSize * sizeof(unsigned long long));
+                    PostRecv(socketContext->socket, IOContext, (char*)IOContext->payload.data(), (IOContext->PayloadSize * sizeof(unsigned long long)));
+                    break;
+                }
             case RECVPAYLOAD:
-                    handleReceiveMessage(socketContext, IOContext);
+                {
+                    std::vector<unsigned long long> primes(IOContext->PayloadSize);
+                    std::fill(primes.begin(), primes.end(), 0);
+                    bool success = readMsg(IOContext->payload, IOContext->PayloadSize, primes);
+                    if (!success)
+                        throw (std::string("NO NO NO, readMSG"));
+                    messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
+                    handleSendMessage(socketContext, IOContext);
+                }
                 break;
 
             default:
@@ -99,81 +129,12 @@ namespace PrimeProcessor {
         // @TODO Stop thread logic
     }
 
-    void NetworkManager::handleAccept(PerSocketContext* socketContext, PerIOContext* IOContext) {
-        auto nRet = setsockopt(
-            IOContext->acceptSocket,
-            SOL_SOCKET,
-            SO_UPDATE_ACCEPT_CONTEXT,
-            (char*)&listenSocket,
-            sizeof(listenSocket)
-        );
-
-        // @TODO error handling
-        if (IOContext->acceptSocket == INVALID_SOCKET)
-            throw(std::string("NO NO NO"));
-
-        PerSocketContext* newSock = new PerSocketContext(std::move(IOContext->acceptSocket));
-        iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
-        clients.push_back(newSock);
-
-        handleSendMessage(newSock, IOContext);
-
-        CreateAcceptSocket();
-    }
-
     void NetworkManager::handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext) {
         PerIOContext* newIOContext = new PerIOContext();
         socketContext->context.push_back(newIOContext);
-
         socketContext->lastRange = messageQueue->dequeueWork();
         socketContext->lastSentMessage = createMsg(socketContext->lastRange);
         PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
-    }
-
-    void NetworkManager::handleReceiveMessage(PerSocketContext* socketContext, PerIOContext* IOContext) {
-        if (IOContext->operation == SEND) {
-            PerIOContext* newIOContext = new PerIOContext();
-            socketContext->context.push_back(newIOContext);
-
-            // std::cerr << "Hit first block in handleReceiveMessage\n";
-            newIOContext->operation = RECVHEADER;
-            PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
-
-        } else if (IOContext->operation == RECVHEADER) {
-            // std::cerr << "They hit the second block in handleReceiveMessage\n";
-            // read header
-            int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
-
-            if (msgType == CLOSE_CONNECTION) {
-                // @TODO close connection
-                std::cerr << "Close Connection\n\n";
-                return;
-            }
-
-            IOContext->operation = RECVPAYLOAD;
-            IOContext->bytesRead += IOContext->PayloadSize;
-            IOContext->payload.resize(IOContext->PayloadSize * sizeof(unsigned long long));
-            PostRecv(socketContext->socket, IOContext, (char*)IOContext->payload.data(), (IOContext->PayloadSize * sizeof(unsigned long long)));
-
-        } else {
-            // std::cerr << "Hit third block in handleReceiveMessage\n";
-            // read payload & Send Message
-            std::vector<unsigned long long> primes(IOContext->PayloadSize);
-            std::fill(primes.begin(), primes.end(), 0);
-            bool success = readMsg(IOContext->payload, IOContext->PayloadSize, primes);
-
-            if (!success)
-                throw (std::string("NO NO NO, readMSG"));
-
-            messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
-
-            PerIOContext* newIOContext = new PerIOContext();
-            socketContext->context.push_back(newIOContext);
-            socketContext->lastRange = messageQueue->dequeueWork();
-            socketContext->lastSentMessage = createMsg(socketContext->lastRange);
-            PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
-
-        }
     }
 
     void NetworkManager::PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize) {
@@ -189,10 +150,6 @@ namespace PrimeProcessor {
             &IOContext->overlapped,
             NULL
         );
-    
-        if (retval != 0) {
-            std::cerr << "WSARecv Failed, WSALastError: " << WSAGetLastError() << '\n';
-        }
     }
 
     void NetworkManager::PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg) {
@@ -293,7 +250,7 @@ namespace PrimeProcessor {
         ioContext->operation = ACCEPT;
 
         if (needUpdateIOCP) {
-            iocp = CreateIoCompletionPort((HANDLE)listenSocket, iocp, (DWORD_PTR)ioContext, 0);
+            iocp = CreateIoCompletionPort((HANDLE)listenSocket, iocp, (DWORD_PTR)listenSocketContext, 0);
             needUpdateIOCP = false;
         }
 

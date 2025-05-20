@@ -33,13 +33,11 @@ namespace PrimeProcessor {
             char header[3];
             uint16_t PayloadSize;
             std::vector<std::byte> payload;
-            int bytesRead;
             SOCKET acceptSocket;
             OperationType operation;
 
             PerIOContext() : 
                 acceptSocket(INVALID_SOCKET),
-                bytesRead(0),
                 bytesTransfered(0),
                 PayloadSize(0)
             {
@@ -93,8 +91,6 @@ namespace PrimeProcessor {
 
         void workerThread();
         void handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
-        void handleReceiveMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
-        void handleAccept(PerSocketContext* socketContext, PerIOContext* IOContext);
 
         void PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize);
         void PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg);
