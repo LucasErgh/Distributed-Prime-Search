@@ -142,9 +142,8 @@ namespace PrimeProcessor {
         PerIOContext* newIOContext = new PerIOContext();
         socketContext->context.push_back(newIOContext);
 
-        std::cerr << "WSAGetLastError(): " << WSAGetLastError() << '\n';
-
         if (IOContext->bytesRead == 0) {
+            std::cerr << "Hit first block in handleReceiveMessage\n";
             newIOContext->bytesRead = 3;
             newIOContext->wsaBuffer.buf = newIOContext->header;
             newIOContext->wsaBuffer.len = sizeof(newIOContext->header);
@@ -162,6 +161,7 @@ namespace PrimeProcessor {
             );
 
         } else if (IOContext->bytesRead == 3) {
+            std::cerr << "Hit second block in handleReceiveMessage\n";
             // read header
             int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
 
@@ -170,20 +170,21 @@ namespace PrimeProcessor {
                 return;
             }
 
-            newIOContext->payload.resize(IOContext->PayloadSize);
-            newIOContext->wsaBuffer.buf = (char*)IOContext->payload.data();
-            newIOContext->wsaBuffer.len = IOContext->PayloadSize;
-            DWORD size = sizeof(newIOContext->wsaBuffer.buf);
+            IOContext->bytesRead += IOContext->PayloadSize;
+            IOContext->payload.resize(IOContext->PayloadSize);
+            IOContext->wsaBuffer.buf = (char*)IOContext->payload.data();
+            IOContext->wsaBuffer.len = IOContext->PayloadSize;
             WSARecv(
                 socketContext->socket,
-                &newIOContext->wsaBuffer, 1,
+                &IOContext->wsaBuffer, 1,
                 NULL,
                 &dwFlags,
-                &newIOContext->overlapped,
+                &IOContext->overlapped,
                 NULL
             );
 
         } else {
+            std::cerr << "Hit third block in handleReceiveMessage\n";
             // read payload & Send Message
             IOContext->payload.resize(IOContext->PayloadSize);
             memcpy(IOContext->payload.data(), IOContext->wsaBuffer.buf, sizeof(IOContext->wsaBuffer.buf));
@@ -199,8 +200,8 @@ namespace PrimeProcessor {
             socketContext->lastRange = messageQueue->dequeueWork();
             socketContext->lastSentMessage = createMsg(socketContext->lastRange);
             newIOContext->message = socketContext->lastSentMessage;
-            newIOContext->wsaBuffer.buf = (char*)socketContext->lastSentMessage.data();
-            newIOContext->wsaBuffer.len = sizeof(IOContext->wsaBuffer.buf);
+            newIOContext->wsaBuffer.buf = (char*)newIOContext->message.data();
+            newIOContext->wsaBuffer.len = newIOContext->message.size();
             DWORD bytes = 3;
             newIOContext->operation = RECV;
             WSASend(
