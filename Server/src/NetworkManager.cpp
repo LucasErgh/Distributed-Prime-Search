@@ -146,13 +146,11 @@ namespace PrimeProcessor {
                     if (msgType == CLOSE_CONNECTION) {
                         std::cerr << "Close Connection Sent From Client\n\n";
                         {
-                            {
-                                std::unique_lock<std::mutex> lock(clientsMutex);
-                                messageQueue->searchFailed(socketContext->lastRange);
-                                auto it = std::find(clients.begin(), clients.end(), socketContext);
-                                clients.erase(it);
-                                clientConditional.notify_one();
-                            }
+                            std::unique_lock<std::mutex> lock(clientsMutex);
+                            messageQueue->searchFailed(socketContext->lastRange);
+                            auto it = std::find(clients.begin(), clients.end(), socketContext);
+                            clients.erase(it);
+                            clientConditional.notify_one();
                             socketContext->context.remove(IOContext);
                             delete IOContext;
                             IOContext == nullptr;
