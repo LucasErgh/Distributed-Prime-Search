@@ -40,12 +40,12 @@ namespace PrimeProcessor {
 
     void NetworkManager::stop(){
 
-        for (auto cur : clients) {
-            PostClose(cur);
-        }
-
         {
             std::unique_lock<std::mutex> lock(clientsMutex);
+            for (auto cur : clients) {
+                PostClose(cur);
+            }
+
             if (!clients.empty())
                 clientConditional.wait(lock, [this](){ return clients.empty(); });
         }
@@ -61,8 +61,6 @@ namespace PrimeProcessor {
         closesocket(listenSocket);
         if (listenSocketContext)
             delete listenSocketContext;
-
-        assert(clients.size() == 0);
 
         CloseHandle(iocp);
         WSACleanup();
@@ -142,11 +140,13 @@ namespace PrimeProcessor {
                     if (msgType == CLOSE_CONNECTION) {
                         std::cerr << "Close Connection\n\n";
                         {
-                            std::unique_lock<std::mutex> lock(clientsMutex);
-                            messageQueue->searchFailed(socketContext->lastRange);
-                            auto it = std::find(clients.begin(), clients.end(), socketContext);
-                            clients.erase(it);
-                            clientConditional.notify_one();
+                            {
+                                std::unique_lock<std::mutex> lock(clientsMutex);
+                                messageQueue->searchFailed(socketContext->lastRange);
+                                auto it = std::find(clients.begin(), clients.end(), socketContext);
+                                clients.erase(it);
+                                clientConditional.notify_one();
+                            }
                             socketContext->context.remove(IOContext);
                             delete IOContext;
                             IOContext == nullptr;
@@ -179,8 +179,11 @@ namespace PrimeProcessor {
                     messageQueue->searchFailed(socketContext->lastRange);
                     closesocket(socketContext->socket);
                     socketContext->socket = INVALID_SOCKET;
-                    auto it = std::find(clients.begin(), clients.end(), socketContext);
-                    clients.erase(it);
+                    {
+                        std::unique_lock<std::mutex> lock(clientsMutex);
+                        auto it = std::find(clients.begin(), clients.end(), socketContext);
+                        clients.erase(it);
+                    }
                     clientConditional.notify_one();
                     break;
                 }
