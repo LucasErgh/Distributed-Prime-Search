@@ -1,5 +1,5 @@
 #include "ServerLogic.h"
-#include "MySockets.h"
+#include "NetworkManager.h"
 
 #include <iostream>
 #include <string>
@@ -9,17 +9,25 @@
 int main() {
     using namespace PrimeProcessor;
 
+    std::cout << '\n';
+
     MessageQueue* messageQueue = new MessageQueue();
 
     ServerLogic server(messageQueue);
     std::thread serverThread(&ServerLogic::start, &server);
 
-    SocketManager socketManager(messageQueue);
-    socketManager.start();
+    NetworkManager networkManager(messageQueue);
+    try{
+        networkManager.start();
+    } catch (std::string& e) {
+        std::cerr << e << '\n';
+    } catch (...) {
+        std::cerr << "Caught in main()";
+    }
 
     std::cin.get();
 
-    socketManager.stop();
+    networkManager.stop();
 
     server.stop();
     serverThread.join();

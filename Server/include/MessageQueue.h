@@ -20,7 +20,6 @@ namespace PrimeProcessor {
         std::mutex queueMutex;
 
         std::atomic_bool needQueueRefilled = true;
-        std::atomic_bool primesToReceive = false;
         std::atomic_bool workToReceive = false;
 
         // Queue of ranges to be searched

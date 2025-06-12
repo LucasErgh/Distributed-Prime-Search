@@ -18,23 +18,6 @@ void Connection::serverComms(){
     std::array<unsigned long long, 2> range;
 
     do {
-        // send message
-        std::vector<unsigned long long> primes = worker.getPrimes();
-        std::vector<std::byte> message = createMsg(primes);
-        
-
-        std::cout << "Sending server the following primes: " << std::endl;
-        for (auto i : primes){
-            std::cout << std::setw(4) << i << std::endl;
-        }   std::cout << "End of prime list" << std::endl;
-
-        int iSendResult = send(serverSocket, reinterpret_cast<char*>(message.data()), message.size(), 0);
-        if(iSendResult == SOCKET_ERROR){
-            closesocket(serverSocket);
-            WSACleanup();
-            std::cout << "send failed: " << std::endl;
-        }
-
         // get message header
         iResult = recv(serverSocket, reinterpret_cast<char*>(header), 3, 0);
         if (iResult <= 0){
@@ -43,37 +26,53 @@ void Connection::serverComms(){
             std::cout << "receive failed: " << std::endl;
         }
 
-         // read msg header and check if client is closing connection
-            msgType = readMsg(header, payloadSize);
-            if (!msgType) {
-                // To-Do close client connection
-                return;
-            } 
+        // read msg header and check if client is closing connection
+        msgType = readMsg(header, payloadSize);
+        if (!msgType) {
+            // To-Do close client connection
+            return;
+        } 
 
-            // get payload size in bytes
-            size_t payloadBytes = payloadSize * sizeof(unsigned long long);
+        // get payload size in bytes
+        size_t payloadBytes = payloadSize * sizeof(unsigned long long);
 
-            // read payload
-            std::vector<std::byte> payload(payloadBytes);
-            iResult = recv(serverSocket, reinterpret_cast<char*>(payload.data()), payloadBytes, 0);
-            if (iResult < 0) {
-                closesocket(serverSocket);
-                WSACleanup();
-                std::cout << "deserialize failed: " << std::endl;
-            }
-            bytesReceived += iResult;
+        // read payload
+        std::vector<std::byte> payload(payloadBytes);
+        iResult = recv(serverSocket, reinterpret_cast<char*>(payload.data()), payloadBytes, 0);
+        if (iResult < 0) {
+            closesocket(serverSocket);
+            WSACleanup();
+            std::cout << "deserialize failed: " << std::endl;
+        }
+        bytesReceived += iResult;
 
-            // deserialize payload and send list to server manager
-            if (!readMsg(payload, payloadSize, range)){
-                // To-Do handle deseerialize error
-                closesocket(serverSocket);
-                WSACleanup();
-                std::cout << "send failed: " << std::endl;
-            }
-            std::cout << "Received work range: (" << range[0] << ", " << range[1] << ")" << std::endl; 
-            worker.newRange(range);
-            worker.search();
-        
+        // deserialize payload and send list to server manager
+        if (!readMsg(payload, payloadSize, range)){
+            // To-Do handle deseerialize error
+            closesocket(serverSocket);
+            WSACleanup();
+            std::cout << "send failed: " << std::endl;
+        }
+        std::cout << "Received work range: (" << range[0] << ", " << range[1] << ")" << std::endl; 
+        worker.newRange(range);
+        worker.search();
+
+        // send message
+        std::vector<unsigned long long> primes = worker.getPrimes();
+        std::vector<std::byte> message = createMsg(primes);
+
+        // std::cout << "Sending server the following primes: " << std::endl;
+        // for (auto i : primes){
+        //     std::cout << std::setw(4) << i << std::endl;
+        // }
+        // std::cout << "End of prime list" << std::endl;
+
+        int iSendResult = send(serverSocket, reinterpret_cast<char*>(message.data()), message.size(), 0);
+        if(iSendResult == SOCKET_ERROR){
+            closesocket(serverSocket);
+            WSACleanup();
+            std::cout << "send failed: " << std::endl;
+        }
     } while (iResult > 0); 
     std::cout << "Stopped communication loop" << std::endl;
 
@@ -139,6 +138,7 @@ void Connection::connectToServer(){
 // start connection with server
 void Connection::start(){
     connectToServer();
+    std::cerr << "\nConnected to Server\n";
     Connection::connectionThread = std::thread(serverComms, this);
 }
 // close connection with server
