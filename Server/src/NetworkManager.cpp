@@ -6,9 +6,6 @@
 #include <cassert>
 
 namespace PrimeProcessor {
-    struct perSocketContext{
-
-    };
 
     NetworkManager::NetworkManager(MessageQueue* messageQueue) : messageQueue(messageQueue) {
 
