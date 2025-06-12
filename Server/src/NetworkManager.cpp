@@ -88,6 +88,11 @@ namespace PrimeProcessor {
                 continue;
             }
 
+            if (!success && std::find(clients.begin(), clients.end(), socketContext) == clients.end()){
+                delete IOContext;
+                continue;
+            }
+
             if (!success) {
                 std::cerr << "GetQueuedCompletionStatus failed with last error: " << GetLastError() << '\n';
                 throw ("NO NO NO");
@@ -107,8 +112,10 @@ namespace PrimeProcessor {
                         sizeof(listenSocket)
                     );
                     // @TODO error handling
-                    if (IOContext->acceptSocket == INVALID_SOCKET)
+                    if (IOContext->acceptSocket == INVALID_SOCKET){
+                        std::cerr << "Worker thread failed in case ACCEPT";
                         throw(std::string("NO NO NO"));
+                    }
                     PerSocketContext* newSock = new PerSocketContext(std::move(IOContext->acceptSocket));
                     iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
                     {
@@ -137,7 +144,7 @@ namespace PrimeProcessor {
                 {
                     int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
                     if (msgType == CLOSE_CONNECTION) {
-                        std::cerr << "Close Connection\n\n";
+                        std::cerr << "Close Connection Sent From Client\n\n";
                         {
                             {
                                 std::unique_lock<std::mutex> lock(clientsMutex);
@@ -163,8 +170,10 @@ namespace PrimeProcessor {
                     std::vector<unsigned long long> primes(IOContext->PayloadSize);
                     std::fill(primes.begin(), primes.end(), 0);
                     bool success = readMsg(IOContext->payload, IOContext->PayloadSize, primes);
-                    if (!success)
+                    if (!success){
+                        std::cerr << "Worker thread failed in case RECVPAYLOAD";
                         throw (std::string("NO NO NO, readMSG"));
+                    }
                     messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
                     socketContext->lastRange.fill(0);
                     handleSendMessage(socketContext, IOContext);
@@ -175,14 +184,12 @@ namespace PrimeProcessor {
                 }
             case CLOSE:
                 {
+                    std::unique_lock<std::mutex> lock(clientsMutex);
                     messageQueue->searchFailed(socketContext->lastRange);
                     closesocket(socketContext->socket);
                     socketContext->socket = INVALID_SOCKET;
-                    {
-                        std::unique_lock<std::mutex> lock(clientsMutex);
-                        auto it = std::find(clients.begin(), clients.end(), socketContext);
-                        clients.erase(it);
-                    }
+                    auto it = std::find(clients.begin(), clients.end(), socketContext);
+                    clients.erase(it);
                     clientConditional.notify_one();
                     break;
                 }
