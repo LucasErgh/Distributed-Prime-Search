@@ -102,5 +102,4 @@ namespace PrimeProcessor {
 
         return vec;
     }
-
 }

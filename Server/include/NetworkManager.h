@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <thread>
+#include <condition_variable>
 #include <winsock2.h>
 #include <stdio.h>
 #include <mswsock.h>
@@ -62,6 +63,13 @@ namespace PrimeProcessor {
             PerSocketContext(SOCKET socket = INVALID_SOCKET) : socket(socket) {
 
             }
+
+            ~PerSocketContext() {
+                for (auto* cur : context) {
+                    if (cur)
+                        delete cur;
+                }
+            }
         };
 
     public:
@@ -73,6 +81,7 @@ namespace PrimeProcessor {
         void stop();
 
     private:
+        std::atomic_bool running = true;
         MessageQueue* messageQueue;
 
         WSAData wsaData;
@@ -85,6 +94,7 @@ namespace PrimeProcessor {
 
         std::vector<PerSocketContext*> clients;
         std::mutex clientsMutex;
+        std::condition_variable clientConditional;
 
         SOCKET listenSocket;
         PerSocketContext* listenSocketContext;
@@ -94,6 +104,8 @@ namespace PrimeProcessor {
 
         void PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize);
         void PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg);
+        void PostClose(PerSocketContext* socketContext);
+        void PostNull();
 
         bool CreateListenSocket();
         void CreateAcceptSocket();

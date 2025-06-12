@@ -43,6 +43,32 @@ namespace PrimeProcessor {
 
     void NetworkManager::stop(){
 
+        for (auto cur : clients) {
+            PostClose(cur);
+        }
+
+        {
+            std::unique_lock<std::mutex> lock(clientsMutex);
+            if (!clients.empty())
+                clientConditional.wait(lock, [this](){ return clients.empty(); });
+        }
+
+        running = false;
+        for (int i = 0; i < workers.size(); ++i){
+            PostNull();
+        }
+        for (auto& cur : workers) {
+            cur.join();
+        }
+
+        closesocket(listenSocket);
+        if (listenSocketContext)
+            delete listenSocketContext;
+
+        assert(clients.size() == 0);
+
+        CloseHandle(iocp);
+        WSACleanup();
     }
 
     void NetworkManager::workerThread(){
@@ -50,7 +76,7 @@ namespace PrimeProcessor {
         PerSocketContext* socketContext;
         unsigned long bytes = 0;
 
-        while (true /* @TODO later add an atomic for running */) {
+        while (running) {
             bool success = GetQueuedCompletionStatus(
                 iocp,
                 &bytes,
@@ -59,10 +85,19 @@ namespace PrimeProcessor {
                 INFINITE
             );
 
-            if (!success)
-                throw(std::string("NO NO NO, GetQueuedCompletionStatus"));
-            
             PerIOContext* IOContext = CONTAINING_RECORD(lpOverlapped, PerIOContext, overlapped);
+
+            // checks for key given by PostNull to exit GetQueuedCompletionStatus and continue
+            if (socketContext == nullptr) {
+                delete IOContext;
+                continue;
+            }
+
+            if (!success) {
+                std::cerr << "GetQueuedCompletionStatus failed with last error: " << GetLastError() << '\n';
+                throw ("NO NO NO");
+            }
+
 
             IOContext->bytesTransfered += bytes;
 
@@ -82,9 +117,15 @@ namespace PrimeProcessor {
                         throw(std::string("NO NO NO"));
                     PerSocketContext* newSock = new PerSocketContext(std::move(IOContext->acceptSocket));
                     iocp = CreateIoCompletionPort((HANDLE)newSock->socket, iocp, (DWORD_PTR)newSock, 0);
-                    clients.push_back(newSock);
+                    {
+                        std::unique_lock<std::mutex> lock(clientsMutex);
+                        clients.push_back(newSock);
+                    }
                     handleSendMessage(newSock, IOContext);
                     CreateAcceptSocket();
+                    socketContext->context.remove(IOContext);
+                    delete IOContext;
+                    IOContext = nullptr;
                     break;
                 }
             case SEND:
@@ -93,15 +134,28 @@ namespace PrimeProcessor {
                     socketContext->context.push_back(newIOContext);
                     newIOContext->operation = RECVHEADER;
                     PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
+                    socketContext->context.remove(IOContext);
+                    delete IOContext;
+                    IOContext = nullptr;
                     break;
                 }
             case RECVHEADER:
                 {
                     int msgType = readMsg((uint8_t*)IOContext->header, IOContext->PayloadSize);
                     if (msgType == CLOSE_CONNECTION) {
-                        // @TODO close connection
                         std::cerr << "Close Connection\n\n";
-                        return;
+                        {
+                            std::unique_lock<std::mutex> lock(clientsMutex);
+                            messageQueue->searchFailed(socketContext->lastRange);
+                            auto it = std::find(clients.begin(), clients.end(), socketContext);
+                            clients.erase(it);
+                            clientConditional.notify_one();
+                            socketContext->context.remove(IOContext);
+                            delete IOContext;
+                            IOContext == nullptr;
+                            delete socketContext;
+                        }
+                        continue;
                     }
                     IOContext->operation = RECVPAYLOAD;
                     IOContext->payload.resize(IOContext->PayloadSize * sizeof(unsigned long long));
@@ -116,17 +170,28 @@ namespace PrimeProcessor {
                     if (!success)
                         throw (std::string("NO NO NO, readMSG"));
                     messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
+                    socketContext->lastRange.fill(0);
                     handleSendMessage(socketContext, IOContext);
+                    socketContext->context.remove(IOContext);
+                    delete IOContext;
+                    IOContext = nullptr;
                     break;
                 }
-
+            case CLOSE:
+                {
+                    messageQueue->searchFailed(socketContext->lastRange);
+                    closesocket(socketContext->socket);
+                    socketContext->socket = INVALID_SOCKET;
+                    auto it = std::find(clients.begin(), clients.end(), socketContext);
+                    clients.erase(it);
+                    clientConditional.notify_one();
+                    break;
+                }
             default:
                 // @TODO handle error
                 break;
             }
         }
-
-        // @TODO Stop thread logic
     }
 
     void NetworkManager::handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext) {
@@ -165,6 +230,18 @@ namespace PrimeProcessor {
             &IOContext->overlapped,
             NULL
         );
+    }
+
+    void NetworkManager::PostNull(){
+        PerIOContext* IOContext = new PerIOContext();
+        PostQueuedCompletionStatus(iocp, 0, 0, &IOContext->overlapped);
+    }
+
+    void NetworkManager::PostClose(PerSocketContext* socketContext) {
+        PerIOContext* newIOContext = new PerIOContext();
+        socketContext->context.push_back(newIOContext);
+        socketContext->lastSentMessage = createMsg();
+        PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
     }
 
     bool NetworkManager::CreateListenSocket() {
@@ -273,7 +350,6 @@ namespace PrimeProcessor {
             &bytesReceived,
             (LPOVERLAPPED) &(ioContext->overlapped)
         );
-        listenSocketContext->context.push_back(std::move(ioContext));
 
         error = WSAGetLastError();
         if (nRet == 0 && error != ERROR_IO_PENDING){
