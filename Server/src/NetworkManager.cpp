@@ -82,7 +82,7 @@ namespace PrimeProcessor {
 
             PerIOContext* IOContext = CONTAINING_RECORD(lpOverlapped, PerIOContext, overlapped);
 
-            // checks for key given by PostNull to exit GetQueuedCompletionStatus and continue
+            // checks for key given by PostNull to stop waiting for GetQueuedCompletionStatus and continue
             if (socketContext == nullptr) {
                 delete IOContext;
                 continue;
