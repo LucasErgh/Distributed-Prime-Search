@@ -93,7 +93,6 @@ namespace PrimeProcessor {
                 throw ("NO NO NO");
             }
 
-
             IOContext->bytesTransfered += bytes;
 
             switch (IOContext->operation)

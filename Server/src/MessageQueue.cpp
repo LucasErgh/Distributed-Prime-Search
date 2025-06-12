@@ -90,7 +90,7 @@ namespace PrimeProcessor {
     }
 
     bool MessageQueue::primesToRetreive(){
-        return primesToReceive;
+        return primesFound.size() >= 1000;
     }
 
     // Returnes a vector of all ranges in progess and in the work queue
