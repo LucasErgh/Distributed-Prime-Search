@@ -103,7 +103,7 @@ namespace PrimeProcessor {
         void handleSendMessage(PerSocketContext* socketContext, PerIOContext* IOContext);
 
         void PostRecv(SOCKET& socket, PerIOContext* IOContext, char* buffer, int bufferSize);
-        void PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg);
+        void PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg, OperationType operation = SEND);
         void PostClose(PerSocketContext* socketContext);
         void PostNull();
 

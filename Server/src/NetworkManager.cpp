@@ -216,11 +216,11 @@ namespace PrimeProcessor {
         );
     }
 
-    void NetworkManager::PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg) {
+    void NetworkManager::PostSend(SOCKET& socket, PerIOContext* IOContext, std::vector<std::byte>& msg, OperationType operation) {
         IOContext->message = msg;
         IOContext->wsaBuffer.buf = (char*)IOContext->message.data();
         IOContext->wsaBuffer.len = IOContext->message.size();
-        IOContext->operation = SEND;
+        IOContext->operation = operation;
         WSASend(
             socket,
             &IOContext->wsaBuffer, 1,
@@ -240,7 +240,7 @@ namespace PrimeProcessor {
         PerIOContext* newIOContext = new PerIOContext();
         socketContext->context.push_back(newIOContext);
         socketContext->lastSentMessage = createMsg();
-        PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage);
+        PostSend(socketContext->socket, newIOContext, socketContext->lastSentMessage, CLOSE);
     }
 
     bool NetworkManager::CreateListenSocket() {
