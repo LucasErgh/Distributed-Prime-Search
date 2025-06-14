@@ -16,6 +16,7 @@ void Connection::serverComms(){
     uint16_t payloadSize;
     int bytesReceived;
     std::array<unsigned long long, 2> range;
+    std::vector<unsigned long long> primes;
 
     do {
         // get message header
@@ -55,8 +56,7 @@ void Connection::serverComms(){
             std::cout << "send failed: " << std::endl;
         }
         std::cout << "Received work range: (" << range[0] << ", " << range[1] << ")" << std::endl; 
-        worker.newRange(range);
-        worker.search();
+        search(range, primes);
 
         if (closingConnection){
             std::vector<std::byte> msg = createMsg();
@@ -68,7 +68,6 @@ void Connection::serverComms(){
         }
 
         // send message
-        std::vector<unsigned long long> primes = worker.getPrimes();
         std::vector<std::byte> message = createMsg(primes);
 
         // std::cout << "Sending server the following primes: " << std::endl;

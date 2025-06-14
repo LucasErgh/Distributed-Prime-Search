@@ -21,8 +21,6 @@ private:
 
     void connectToServer();
 
-    // plan on making a list of workers to process the search on multiple threads
-    PrimeSearch worker;
     SOCKET serverSocket = INVALID_SOCKET;
     static std::thread connectionThread;
 

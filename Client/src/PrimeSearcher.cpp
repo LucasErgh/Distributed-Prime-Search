@@ -1,7 +1,6 @@
 #include "PrimeSearcher.h"
 
-void PrimeSearch::search(){
-    inProgress = true;
+void search(std::array<unsigned long long, 2>& range, std::vector<unsigned long long>& primes) {
     for(unsigned long long i = range[0]; i <= range[1]; ++i){
         for (unsigned long long d = 2; d <= i; ++d){
             if (d == i) {
@@ -12,13 +11,4 @@ void PrimeSearch::search(){
                 break;
         }
     }
-    primesToSend = true;
-    inProgress = false;
-}
-
-std::vector<unsigned long long> PrimeSearch::getPrimes() {
-    std::vector<unsigned long long> primesCopy = primes;
-    primes.clear();
-    primesToSend = false; 
-    return primesCopy; 
 }
