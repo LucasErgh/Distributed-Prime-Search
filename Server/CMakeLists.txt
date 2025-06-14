@@ -14,3 +14,11 @@ target_link_libraries(Server PUBLIC ws2_32)
 add_executable(DPPServer "src/DPPServer.cpp")
 set_target_properties(DPPServer PROPERTIES OUTPUT_NAME "DPPServer")
 target_link_libraries(DPPServer PRIVATE Server)
+
+add_custom_target(run_server
+    COMMENT "Run server application"
+    COMMAND $<TARGET_FILE:DPPServer>
+    DEPENDS Server CommonLib
+    USES_TERMINAL
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
