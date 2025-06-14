@@ -123,10 +123,10 @@ namespace PrimeProcessor {
                         std::unique_lock<std::mutex> lock(clientsMutex);
                         clients.push_back(newSock);
                     }
-                    CreateAcceptSocket();
                     socketContext->context.remove(IOContext);
                     delete IOContext;
                     IOContext = nullptr;
+                    CreateAcceptSocket();
                     handleSendMessage(newSock, IOContext);
                     break;
                 }
