@@ -24,10 +24,10 @@ add_custom_target(run_client
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_custom_target(run_clients_parallel
         COMMENT "Run four client applications"
-        COMMAND start $<TARGET_FILE:Client>
-        COMMAND start $<TARGET_FILE:Client>
-        COMMAND start $<TARGET_FILE:Client>
-        COMMAND start $<TARGET_FILE:Client>
+        COMMAND start $<TARGET_FILE:DPPClient>
+        COMMAND start $<TARGET_FILE:DPPClient>
+        COMMAND start $<TARGET_FILE:DPPClient>
+        COMMAND start $<TARGET_FILE:DPPClient>
         DEPENDS Client CommonLib
         USES_TERMINAL
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
