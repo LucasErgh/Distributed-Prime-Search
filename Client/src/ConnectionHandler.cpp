@@ -28,9 +28,10 @@ void Connection::serverComms(){
 
         // read msg header and check if client is closing connection
         msgType = readMsg(header, payloadSize);
-        if (!msgType) {
+        if (msgType == CLOSE_CONNECTION) {
             // To-Do close client connection
-            return;
+            std::cout << "Server Closed Connection";
+            break;
         } 
 
         // get payload size in bytes
@@ -57,6 +58,15 @@ void Connection::serverComms(){
         worker.newRange(range);
         worker.search();
 
+        if (closingConnection){
+            std::vector<std::byte> msg = createMsg();
+            iResult = send(serverSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
+            closesocket(serverSocket);
+            serverSocket = INVALID_SOCKET;
+            std::cout << "Closed connection with server\n";
+            break;
+        }
+
         // send message
         std::vector<unsigned long long> primes = worker.getPrimes();
         std::vector<std::byte> message = createMsg(primes);
@@ -69,8 +79,8 @@ void Connection::serverComms(){
 
         int iSendResult = send(serverSocket, reinterpret_cast<char*>(message.data()), message.size(), 0);
         if(iSendResult == SOCKET_ERROR){
-            closesocket(serverSocket);
-            WSACleanup();
+            // closesocket(serverSocket);
+            // WSACleanup();
             std::cout << "send failed: " << std::endl;
         }
     } while (iResult > 0); 
@@ -143,10 +153,6 @@ void Connection::start(){
 }
 // close connection with server
 void Connection::stop(){
-    std::vector<std::byte> msg = createMsg();
     closingConnection = true;
-    iResult = send(serverSocket, reinterpret_cast<char*>(msg.data()), 3, 0);
-    closesocket(serverSocket);
-    serverSocket = INVALID_SOCKET;
     connectionThread.join();
 }

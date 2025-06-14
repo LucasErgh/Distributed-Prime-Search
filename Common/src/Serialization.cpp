@@ -40,7 +40,7 @@ std::vector<std::byte> createMsg(const std::vector<unsigned long long>& primes) 
     return msg;
 }
 
-// deserializes header returning an int 
+// deserializes header returning message type as an int
 int readMsg(uint8_t *header, uint16_t &payloadSize){
     uint8_t msgType = header[0];
     memcpy(&payloadSize, reinterpret_cast<char*>(header+1), sizeof(uint16_t));
