@@ -123,9 +123,7 @@ namespace PrimeProcessor {
                         std::unique_lock<std::mutex> lock(clientsMutex);
                         clients.push_back(newSock);
                     }
-                    socketContext->context.remove(IOContext);
-                    delete IOContext;
-                    IOContext = nullptr;
+                    socketContext->removeContext(IOContext);
                     CreateAcceptSocket();
                     handleSendMessage(newSock, IOContext);
                     break;
@@ -135,9 +133,7 @@ namespace PrimeProcessor {
                     PerIOContext* newIOContext = new PerIOContext();
                     socketContext->context.push_back(newIOContext);
                     newIOContext->operation = RECVHEADER;
-                    socketContext->context.remove(IOContext);
-                    delete IOContext;
-                    IOContext = nullptr;
+                    socketContext->removeContext(IOContext);
                     PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
                     break;
                 }
@@ -175,9 +171,7 @@ namespace PrimeProcessor {
                     }
                     messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
                     socketContext->lastRange.fill(0);
-                    socketContext->context.remove(IOContext);
-                    delete IOContext;
-                    IOContext = nullptr;
+                    socketContext->removeContext(IOContext);
                     handleSendMessage(socketContext, IOContext);
                     break;
                 }

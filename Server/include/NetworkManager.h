@@ -70,6 +70,12 @@ namespace PrimeProcessor {
                         delete cur;
                 }
             }
+
+            void removeContext(PerIOContext* IOContext){
+                context.remove(IOContext);
+                delete IOContext;
+                IOContext = nullptr;
+            }
         };
 
     public:
