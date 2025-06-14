@@ -13,7 +13,7 @@ add_subdirectory(Server)
 add_subdirectory(Client)
 
 add_custom_target(run_benchmarks
-    COMMENT "Run benchmarks\n "
+    COMMENT "Run benchmarks"
     COMMAND $<TARGET_FILE:Benchmarks>
     DEPENDS Server Common Client
     USES_TERMINAL
@@ -21,7 +21,7 @@ add_custom_target(run_benchmarks
 )
 
 add_custom_target(run_server
-    COMMENT "Run server application\n"
+    COMMENT "Run server application"
     COMMAND $<TARGET_FILE:Server>
     DEPENDS Server Common
     USES_TERMINAL
@@ -29,7 +29,7 @@ add_custom_target(run_server
 )
 
 add_custom_target(run_client
-    COMMENT "Run client application\n"
+    COMMENT "Run client application"
     COMMAND $<TARGET_FILE:Client>
     DEPENDS Client Common
     USES_TERMINAL
@@ -38,7 +38,7 @@ add_custom_target(run_client
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_custom_target(run_clients_parallel
-        COMMENT "Run four client applications\n"
+        COMMENT "Run four client applications"
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
