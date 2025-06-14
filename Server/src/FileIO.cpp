@@ -20,8 +20,10 @@ void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::vector
         if(!rangesSearched.fail())
             primesSearched.push_back( {min, max} );
     }
-    if (primesSearched.empty())
-        primesSearched.push_back({1, 1});
+    if (primesSearched.empty()){
+        primesSearched.push_back({1, 3});
+        writePrimesFound(primesFound, {2, 3});
+    }
 
     rangesSearched.clear();
     rangesSearched.close();
