@@ -18,7 +18,7 @@ std::vector<std::byte> createMsg(const std::vector<unsigned long long>& primes) 
     const uint16_t payloadSize = primes.size();
 
     // calculate message size
-    size_t size = sizeof(msgType) + sizeof(payloadSize) + payloadSize * sizeof(unsigned long long);
+    size_t size = sizeof(msgType) + sizeof(payloadSize) + primes.size() * sizeof(unsigned long long);
 
     std::vector<std::byte> msg(size);
     int offset = 0;

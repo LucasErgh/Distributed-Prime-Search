@@ -12,6 +12,8 @@
 namespace PrimeProcessor{
     class ServerLogic {
     private:
+        int searchSize = 100000; // (Max this can go is about 250,000 before header is too small)
+
         MessageQueue* messageQueue;
 
         std::atomic_bool stopFlag = false;

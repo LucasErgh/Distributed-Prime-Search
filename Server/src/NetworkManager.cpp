@@ -104,6 +104,7 @@ namespace PrimeProcessor {
                     auto it = std::find(clients.begin(), clients.end(), socketContext);
                     delete *it;
                     clients.erase(it);
+                    continue;
                 }
                 // std::cerr << "GetQueuedCompletionStatus failed with last error: " << GetLastError() << '\n';
             }

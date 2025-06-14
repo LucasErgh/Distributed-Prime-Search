@@ -69,6 +69,7 @@ void Connection::serverComms(){
 
         // send message
         std::vector<std::byte> message = createMsg(primes);
+        primes.clear();
 
         // std::cout << "Sending server the following primes: " << std::endl;
         // for (auto i : primes){
