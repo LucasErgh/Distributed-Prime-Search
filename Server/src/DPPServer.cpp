@@ -9,8 +9,6 @@
 int main() {
     using namespace PrimeProcessor;
 
-    std::cout << '\n';
-
     MessageQueue* messageQueue = new MessageQueue();
 
     ServerLogic server(messageQueue);

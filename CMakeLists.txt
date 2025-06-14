@@ -22,7 +22,7 @@ add_custom_target(run_benchmarks
 
 add_custom_target(run_server
     COMMENT "Run server application"
-    COMMAND $<TARGET_FILE:Server>
+    COMMAND $<TARGET_FILE:DPPServer>
     DEPENDS Server Common
     USES_TERMINAL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -30,7 +30,7 @@ add_custom_target(run_server
 
 add_custom_target(run_client
     COMMENT "Run client application"
-    COMMAND $<TARGET_FILE:Client>
+    COMMAND $<TARGET_FILE:DPPClient>
     DEPENDS Client Common
     USES_TERMINAL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -39,6 +39,7 @@ add_custom_target(run_client
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_custom_target(run_clients_parallel
         COMMENT "Run four client applications"
+        COMMAND echo a
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
