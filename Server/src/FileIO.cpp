@@ -29,7 +29,7 @@ void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::vector
 
 void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long> primes){
     for(const auto& cur : primes){
-        primesFound << cur << " " << '\n';
+        primesFound << cur << '\n';
         if (!primesFound) {
             std::cerr << "Error writing to file!" << std::endl;
         }
