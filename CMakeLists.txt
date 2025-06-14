@@ -29,10 +29,7 @@ add_custom_target(run_client
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_custom_target(run_clients_parallel
-        COMMENT "Run seven client applications"
-        COMMAND start $<TARGET_FILE:Client>
-        COMMAND start $<TARGET_FILE:Client>
-        COMMAND start $<TARGET_FILE:Client>
+        COMMENT "Run four client applications"
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>

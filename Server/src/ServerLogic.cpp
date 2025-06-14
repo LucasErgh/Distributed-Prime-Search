@@ -69,7 +69,7 @@ namespace PrimeProcessor {
             //// number of digits per search set
             // unsigned long long max = *primes.end();
             // int searchSize = (max <= 100) ? 1000 : (max^2 + 10^5*(max))/max^2 + 1; 
-            int searchSize = 100;
+            int searchSize = 10000; // 10,000
 
             for (int i = workQueue.size(); i < 100; i++){
                 workQueue.push_back( {largestSearched + 1, largestSearched + searchSize} );
