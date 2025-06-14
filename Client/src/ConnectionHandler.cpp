@@ -84,8 +84,7 @@ void Connection::serverComms(){
             std::cout << "send failed: " << std::endl;
         }
     } while (iResult > 0); 
-    std::cout << "Stopped communication loop" << std::endl;
-
+    std::cout << "Stopped communication loop\nPress enter to exit Program" << std::endl;
 }
 
 // initialize winsock library & create PrimSearcher[s] 
