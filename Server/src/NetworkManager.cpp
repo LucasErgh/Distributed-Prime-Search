@@ -95,8 +95,17 @@ namespace PrimeProcessor {
             }
 
             if (!success) {
-                std::cerr << "GetQueuedCompletionStatus failed with last error: " << GetLastError() << '\n';
-                throw ("NO NO NO");
+                std::cout << "Client disconnected unexpectedly\n";
+                {
+                    std::unique_lock<std::mutex> lock(clientsMutex);
+                    messageQueue->searchFailed(socketContext->lastRange);
+                    closesocket(socketContext->socket);
+                    socketContext->socket = INVALID_SOCKET;
+                    auto it = std::find(clients.begin(), clients.end(), socketContext);
+                    delete *it;
+                    clients.erase(it);
+                }
+                // std::cerr << "GetQueuedCompletionStatus failed with last error: " << GetLastError() << '\n';
             }
 
             IOContext->bytesTransfered += bytes;
@@ -123,6 +132,7 @@ namespace PrimeProcessor {
                         std::unique_lock<std::mutex> lock(clientsMutex);
                         clients.push_back(newSock);
                     }
+                    std::cout << "Client connected\n";
                     socketContext->removeContext(IOContext);
                     CreateAcceptSocket();
                     handleSendMessage(newSock, IOContext);
@@ -181,6 +191,7 @@ namespace PrimeProcessor {
                     socketContext->socket = INVALID_SOCKET;
                     auto it = std::find(clients.begin(), clients.end(), socketContext);
                     clients.erase(it);
+                    delete *it;
                     clientConditional.notify_one();
                     break;
                 }
