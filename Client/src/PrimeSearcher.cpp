@@ -16,7 +16,7 @@ void PrimeSearch::search(){
     inProgress = false;
 }
 
-std::vector<unsigned long long> PrimeSearch::getPrimes() { 
+std::vector<unsigned long long> PrimeSearch::getPrimes() {
     std::vector<unsigned long long> primesCopy = primes;
     primes.clear();
     primesToSend = false; 

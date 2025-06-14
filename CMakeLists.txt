@@ -7,12 +7,21 @@ set(CMAKE_BUILD_TYPE="DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+add_subdirectory(Benchmarks)
 add_subdirectory(Common)
 add_subdirectory(Server)
 add_subdirectory(Client)
 
+add_custom_target(run_benchmarks
+    COMMENT "Run benchmarks\n "
+    COMMAND $<TARGET_FILE:Benchmarks>
+    DEPENDS Server Common Client
+    USES_TERMINAL
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_custom_target(run_server
-    COMMENT "Run server application"
+    COMMENT "Run server application\n"
     COMMAND $<TARGET_FILE:Server>
     DEPENDS Server Common
     USES_TERMINAL
@@ -20,7 +29,7 @@ add_custom_target(run_server
 )
 
 add_custom_target(run_client
-    COMMENT "Run client application"
+    COMMENT "Run client application\n"
     COMMAND $<TARGET_FILE:Client>
     DEPENDS Client Common
     USES_TERMINAL
@@ -29,7 +38,7 @@ add_custom_target(run_client
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_custom_target(run_clients_parallel
-        COMMENT "Run four client applications"
+        COMMENT "Run four client applications\n"
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
         COMMAND start $<TARGET_FILE:Client>
