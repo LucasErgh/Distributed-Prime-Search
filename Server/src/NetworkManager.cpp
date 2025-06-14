@@ -34,6 +34,7 @@ namespace PrimeProcessor {
     }
 
     void NetworkManager::start() {
+        std::cout << "Starting Server\n";
         initialize();
         CreateAcceptSocket();
     }
@@ -122,11 +123,11 @@ namespace PrimeProcessor {
                         std::unique_lock<std::mutex> lock(clientsMutex);
                         clients.push_back(newSock);
                     }
-                    handleSendMessage(newSock, IOContext);
                     CreateAcceptSocket();
                     socketContext->context.remove(IOContext);
                     delete IOContext;
                     IOContext = nullptr;
+                    handleSendMessage(newSock, IOContext);
                     break;
                 }
             case SEND:
@@ -134,10 +135,10 @@ namespace PrimeProcessor {
                     PerIOContext* newIOContext = new PerIOContext();
                     socketContext->context.push_back(newIOContext);
                     newIOContext->operation = RECVHEADER;
-                    PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
                     socketContext->context.remove(IOContext);
                     delete IOContext;
                     IOContext = nullptr;
+                    PostRecv(socketContext->socket, newIOContext, newIOContext->header, sizeof(newIOContext->header));
                     break;
                 }
             case RECVHEADER:
@@ -174,10 +175,10 @@ namespace PrimeProcessor {
                     }
                     messageQueue->enqueuePrimesFound(primes, socketContext->lastRange);
                     socketContext->lastRange.fill(0);
-                    handleSendMessage(socketContext, IOContext);
                     socketContext->context.remove(IOContext);
                     delete IOContext;
                     IOContext = nullptr;
+                    handleSendMessage(socketContext, IOContext);
                     break;
                 }
             case CLOSE:
