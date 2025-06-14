@@ -148,9 +148,7 @@ namespace PrimeProcessor {
                             auto it = std::find(clients.begin(), clients.end(), socketContext);
                             clients.erase(it);
                             clientConditional.notify_one();
-                            socketContext->context.remove(IOContext);
-                            delete IOContext;
-                            IOContext == nullptr;
+                            socketContext->removeContext(IOContext);
                             delete socketContext;
                         }
                         continue;
