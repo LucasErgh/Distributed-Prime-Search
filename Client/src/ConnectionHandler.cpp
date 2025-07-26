@@ -146,6 +146,9 @@ void Connection::connectToServer(){
 
 // start connection with server
 void Connection::start(){
+    std::cerr << "Populating seive";
+    populateSeive(seive);
+
     connectToServer();
     std::cerr << "\nConnected to Server\n";
     Connection::connectionThread = std::thread(serverComms, this);

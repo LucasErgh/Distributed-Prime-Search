@@ -29,6 +29,8 @@ private:
     uint8_t header[3];
     int iResult;
 
+    std::vector<int> seive;
+
 public:
     // initialize winsock library & create PrimSearcher[s] 
     Connection();
