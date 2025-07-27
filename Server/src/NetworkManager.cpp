@@ -12,7 +12,8 @@ namespace PrimeProcessor {
     }
 
     NetworkManager::~NetworkManager() {
-
+        if (running)
+            stop();
     }
 
     void NetworkManager::initialize() {
