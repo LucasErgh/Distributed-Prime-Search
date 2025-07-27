@@ -8,6 +8,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <cstring>
 
 namespace PrimeProcessor{
     class ServerLogic {
@@ -18,8 +19,6 @@ namespace PrimeProcessor{
 
         std::atomic_bool stopFlag = false;
 
-        const std::string rangeFile = "../Ranges_Searched.txt";
-        const std::string primeFile = "../Primes_Found.txt";
         std::fstream rangesSearched;
         std::fstream primesFound;
 

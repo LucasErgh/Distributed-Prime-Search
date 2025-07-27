@@ -4,6 +4,10 @@ message(STATUS "Source Dir directories for Server: ${CMAKE_SOURCE_DIR}")
 
 add_library(Server STATIC)
 
+set(DATA_DIR "${CMAKE_SOURCE_DIR}/data")
+add_compile_definitions(Primes_Found_Path="${DATA_DIR}/Primes_Found.txt")
+add_compile_definitions(Primes_Searched_Path="${DATA_DIR}/Primes_Searched.txt")
+
 file(GLOB srcServer "src/*.cpp")
 target_sources(Server PRIVATE ${srcServer})
 target_include_directories(Server PUBLIC include)

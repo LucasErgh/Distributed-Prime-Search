@@ -10,8 +10,8 @@
 namespace PrimeProcessor {
 
     ServerLogic::ServerLogic(MessageQueue* messageQueue) :
-        rangesSearched(std::fstream(rangeFile)),
-        primesFound(std::fstream(primeFile, std::ios::app)),
+        rangesSearched(std::fstream(Primes_Searched_Path)),
+        primesFound(std::fstream(Primes_Found_Path, std::ios::app)),
         messageQueue(messageQueue)
     {
 
@@ -22,6 +22,8 @@ namespace PrimeProcessor {
     void ServerLogic::start(){
         // read data from file
         readIn(rangesSearched, primesFound, primesSearched);
+        rangesSearched.close();
+        rangesSearched.open(Primes_Searched_Path, std::ios::out | std::ios::trunc);
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         std::vector<std::array<unsigned long long, 2>> workQueue;

@@ -5,12 +5,12 @@ void readIn(std::fstream& rangesSearched, std::fstream& primesFound, std::vector
     // Try to open files
     if(rangesSearched.fail()){
         rangesSearched.clear();
-        rangesSearched.open(rangeFile, std::ios::out);
+        rangesSearched.open(Primes_Searched_Path, std::ios::out);
         if(rangesSearched.fail())
-            throw std::runtime_error("Failed to open " + rangeFile + '\n');
+            throw std::runtime_error("Failed to open \n");
     }
     if(primesFound.fail()){
-        throw std::runtime_error("Failed to open " + primeFile + '\n');
+        throw std::runtime_error("Failed to open\n");
     }
 
     // read ranges searched
@@ -41,7 +41,9 @@ void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long>
 }
 
 void writeRangesSearched(std::fstream& rangesSearched, std::vector<std::array<unsigned long long, 2>>& primesSearched){
-    rangesSearched.open(rangeFile, std::ios::out | std::ios::trunc);
+    if (rangesSearched.is_open())
+        rangesSearched.close();
+    rangesSearched.open(Primes_Searched_Path, std::ios::out | std::ios::trunc);
     if(rangesSearched.fail()){
         throw "Fail";
     }
