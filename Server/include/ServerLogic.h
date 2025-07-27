@@ -3,13 +3,11 @@
 
 #include "MessageQueue.h"
 #include "FileIO.h"
-#include <fstream>
 #include <stdexcept>
 #include <memory>
 #include <vector>
 #include <mutex>
 #include <thread>
-#include <cstring>
 
 namespace PrimeProcessor{
     class ServerLogic {
