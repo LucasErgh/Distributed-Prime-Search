@@ -10,8 +10,6 @@
 namespace PrimeProcessor {
 
     ServerLogic::ServerLogic(MessageQueue* messageQueue) :
-        rangesSearched(std::fstream(Primes_Searched_Path)),
-        primesFound(std::fstream(Primes_Found_Path, std::ios::app)),
         messageQueue(messageQueue)
     {
 
@@ -21,9 +19,7 @@ namespace PrimeProcessor {
 
     void ServerLogic::start(){
         // read data from file
-        readIn(rangesSearched, primesFound, primesSearched);
-        rangesSearched.close();
-        rangesSearched.open(Primes_Searched_Path, std::ios::out | std::ios::trunc);
+        io.readIn(primesSearched);
 
         // sorts the vector, merges sequential ranges, then adds missing ranges to workQueue
         std::vector<std::array<unsigned long long, 2>> workQueue;
@@ -42,10 +38,8 @@ namespace PrimeProcessor {
         }
 
         // Now shutdown server
-        writePrimesFound(primesFound, messageQueue->retreivePrimesFound());
+        io.writePrimesFound(messageQueue->retreivePrimesFound());
         storeToFile();
-
-        primesFound.close();
     }
 
     void ServerLogic::stop(){
@@ -59,9 +53,8 @@ namespace PrimeProcessor {
         primesSearched.insert(primesSearched.end(), newSearched.begin(), newSearched.end());
 
         combineRangesBeforeWrite(primesSearched);
-        writeRangesSearched(rangesSearched, primesSearched);
-
-        writePrimesFound(primesFound, primes);
+        io.writeRangesSearched(primesSearched);
+        io.writePrimesFound(primes);
     }
 
     void ServerLogic::tryPopulateWorkQueue(){
@@ -115,7 +108,7 @@ namespace PrimeProcessor {
 
     void ServerLogic::tryReceivingPrimes(){
         if (messageQueue->primesToRetreive()){
-            writePrimesFound(primesFound, messageQueue->retreivePrimesFound());
+            io.writePrimesFound(messageQueue->retreivePrimesFound());
         }
     }
 

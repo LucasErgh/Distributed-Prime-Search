@@ -2,6 +2,7 @@
 #define ServerLogic_h
 
 #include "MessageQueue.h"
+#include "FileIO.h"
 #include <fstream>
 #include <stdexcept>
 #include <memory>
@@ -19,8 +20,7 @@ namespace PrimeProcessor{
 
         std::atomic_bool stopFlag = false;
 
-        std::fstream rangesSearched;
-        std::fstream primesFound;
+        FileIO io;
 
         std::vector<std::array<unsigned long long, 2>> primesSearched;
 

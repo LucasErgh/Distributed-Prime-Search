@@ -6,10 +6,17 @@
 #include <deque>
 #include <vector>
 
-void readIn(std::fstream& rangresSearched, std::fstream& primesFound, std::vector<std::array<unsigned long long, 2>>& primesSearched);
+class FileIO {
+private:
+    std::fstream rangesSearched;
+    std::fstream primesFound;
+public:
+    FileIO();
+    ~FileIO();
 
-void writePrimesFound(std::fstream& primesFound, std::vector<unsigned long long> primes);
-
-void writeRangesSearched(std::fstream& rangesSearched, std::vector<std::array<unsigned long long, 2>>& primesSearched);
+    void readIn(std::vector<std::array<unsigned long long, 2>>& primesSearched);
+    void writePrimesFound(std::vector<unsigned long long> primes);
+    void writeRangesSearched(std::vector<std::array<unsigned long long, 2>>& primesSearched);
+};
 
 #endif
